@@ -1,0 +1,21 @@
+{
+	"name": "artWebApp",
+	"version": "0.0.1",
+	"main": "server.js",
+	"scripts": {
+		"start": "node server.js",
+		"start_dev": "nodemon server.js"
+	},
+	"dependencies": {
+		"body-parser": "^1.19.0",
+		"create-react-app": "^4.0.3",
+		"express": "^4.17.1",
+		"jwt-simple": "^0.5.6",
+		"mongoose": "^5.0.7",
+		"password-hash": "^1.2.2",
+		"cors": "^2.8.5"
+	},
+	"devDependencies": {
+		"nodemon": "^2.0.7"
+	}
+}
