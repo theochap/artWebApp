@@ -7,8 +7,9 @@ module.exports = function(app){
 	 */
 	app.get("/", Account.getUsers);
 	app.get("/:id", Account.getUserById);
+	app.get("/auth", Account.auth);
 	app.post("/login", Account.login);
 	app.post("/", Account.signup);
 	app.delete("/:id", Account.delUser);
-	app.put("/:id", Account.updateUserPseudo);
+	app.put("/:id", Account.updateUserById);
 }

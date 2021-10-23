@@ -1,5 +1,5 @@
 {
-	"name": "artWebApp",
+	"name": "artefact",
 	"version": "0.0.1",
 	"main": "built/server.js",
 	"scripts": {

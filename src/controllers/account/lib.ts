@@ -1,10 +1,36 @@
 import { User } from "../../schema/schemaUser";
+import { Config } from "../../config/config";
 import passwordHash = require("password-hash");
+
+const jwt = require("jwt-simple");
 const burl = "localhost:8080";
 
 export class Account {
+	static async auth(req, res) {
+		const token: string = req.body.token;
+
+		if (token) {
+			const decode = jwt.verify(token, Config.secret)
+
+			return res.status(200)
+				.json({
+					text: "Successful authentification",
+					data: decode
+				})
+
+		}
+		else {
+			return res.status(400)
+				.json({
+					text: "Error 400: Bad Request"
+				})
+		}
+
+
+	}
+
 	static async signup(req, res) {
-		const { password, pseudo, email }: {password: string, pseudo: string, email: string} = req.body;
+		const { password, pseudo, email }: { password: string, pseudo: string, email: string } = req.body;
 
 		if (!email || !password || !pseudo) {
 			// Pas de mail ou de password
@@ -54,7 +80,7 @@ export class Account {
 	}
 
 	static async login(req, res) {
-		const { password, email }: {password: string, email: string} = req.body;
+		const { password, email }: { password: string, email: string } = req.body;
 		if (!email || !password) {
 			return res.status(400).json({
 				text: "Requête invalide",
@@ -85,7 +111,7 @@ export class Account {
 		}
 	}
 
-	static async getUsers(req, res) {
+	static async getUsers(req, res): Promise<any> {
 		try {
 			return User.find()
 				.then((users) =>
@@ -104,7 +130,7 @@ export class Account {
 		}
 	}
 
-	static async delUser(req, res) {
+	static async delUser(req, res): Promise<any> {
 		try {
 			const id = req.params.id;
 			return User.remove({ _id: id })
@@ -134,7 +160,7 @@ export class Account {
 		}
 	}
 
-	static async getUserById(req, res) {
+	static async getUserById(req, res): Promise<any> {
 		try {
 			const id = req.params.id;
 			return User.find(
@@ -167,7 +193,7 @@ export class Account {
 		}
 	}
 
-	static async updateUserPseudo(req, res) {
+	static async updateUserById(req, res): Promise<any> {
 		try {
 			const id = req.params.id;
 			const updatedValues = {};
