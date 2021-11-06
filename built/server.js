@@ -8,6 +8,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var cors = require("cors");
 var express_1 = __importDefault(require("express"));
 var mongoose = require("mongoose");
+var userController_1 = require("./controllers/userController");
+var userAuthentification_1 = require("./controllers/userAuthentification");
+var wallController_1 = require("./controllers/wallController");
 // Connexion à la base de données
 mongoose
     .connect("mongodb://localhost/db")
@@ -30,12 +33,18 @@ app.use(cors());
 app.use(urlencodedParser);
 app.use(express_1.default.json());
 // Définition d'un routeur
-var router = express_1.default.Router();
-app.use("/users", router);
-require(__dirname + "/controllers/userController")(router);
-var wallRouter = express_1.default.Router();
-app.use("/wall", wallRouter);
-require(__dirname + "/controllers/wallController")(wallRouter);
+var privateUserRouter = express_1.default.Router();
+(0, userController_1.PrivateUserMiddleware)(privateUserRouter);
+app.use("/users/private", userAuthentification_1.Authentificate.parseToken, userAuthentification_1.Authentificate.authMiddleware, privateUserRouter);
+var publicUserRouter = express_1.default.Router();
+(0, userController_1.PublicUserMiddleware)(publicUserRouter);
+app.use("/users", publicUserRouter);
+var publicWallRouter = express_1.default.Router();
+(0, wallController_1.PublicWallMiddleware)(publicWallRouter);
+app.use("/wall", publicWallRouter);
+var privateWallRouter = express_1.default.Router();
+(0, wallController_1.PrivateWallMiddleware)(privateWallRouter);
+app.use("/wall/private", privateWallRouter);
 app.get("/", function (req, res) { res.status(200).json({ text: "Succes" }); });
 // Ecoute sur le port 8080
 //

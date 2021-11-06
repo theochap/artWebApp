@@ -1,10 +1,10 @@
 import { Wall } from './wall/lib.js';
 
-module.exports = function (app) {
-
-	app.post("/add", Wall.add);
+export function PublicWallMiddleware(app) {
 	app.get("/", Wall.get);
-	app.post("/del", Wall.del);
 }
 
-
+export function PrivateWallMiddleware(app) {
+	app.post("/add", Wall.add);
+	app.delete("/del", Wall.del);
+}

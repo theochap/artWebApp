@@ -38,11 +38,29 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Account = void 0;
 var schemaUser_1 = require("../../schema/schemaUser");
+var config_1 = require("../../config/config");
 var passwordHash = require("password-hash");
+var jwt = require("jsonwebtoken");
 var burl = "localhost:8080";
 var Account = /** @class */ (function () {
     function Account() {
     }
+    Account.authTest = function (req, res) {
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                if (req.authData) {
+                    return [2 /*return*/, res.status(203).json({ text: "Status 203: Access Authorized", data: req.authData })];
+                }
+                else {
+                    return [2 /*return*/, res.status(400)
+                            .json({
+                            error: "Error 400: Bad Request"
+                        })];
+                }
+                return [2 /*return*/];
+            });
+        });
+    };
     Account.signup = function (req, res) {
         return __awaiter(this, void 0, void 0, function () {
             var _a, password, pseudo, email, user, findUser, error_1, userData, userObject, error_2;
@@ -165,37 +183,40 @@ var Account = /** @class */ (function () {
     };
     Account.delUser = function (req, res) {
         return __awaiter(this, void 0, void 0, function () {
-            var id;
+            var id, token, decode;
             return __generator(this, function (_a) {
-                try {
-                    id = req.params.id;
-                    return [2 /*return*/, schemaUser_1.User.remove({ _id: id })
-                            .then(function (result) {
-                            return res
-                                .status(200)
-                                .json({
-                                text: "User deleted successfully",
-                                result: result,
-                            });
-                        })
-                            .catch(function (err) {
-                            return res
-                                .status(400)
-                                .json({
-                                status: "400",
-                                err: err,
-                            });
-                        })];
+                switch (_a.label) {
+                    case 0:
+                        id = req.params.id;
+                        token = req.token;
+                        if (!token) return [3 /*break*/, 2];
+                        return [4 /*yield*/, jwt.verify(token, config_1.Config.secret)];
+                    case 1:
+                        decode = _a.sent();
+                        return [2 /*return*/, schemaUser_1.User.remove({ _id: id })
+                                .then(function (result) {
+                                return res
+                                    .status(200)
+                                    .json({
+                                    text: "User deleted successfully",
+                                    result: result,
+                                });
+                            })
+                                .catch(function (err) {
+                                return res
+                                    .status(400)
+                                    .json({
+                                    status: "400",
+                                    err: err,
+                                });
+                            })];
+                    case 2:
+                        res.status(400).json({
+                            text: "Error 400, Wrong token"
+                        });
+                        _a.label = 3;
+                    case 3: return [2 /*return*/];
                 }
-                catch (error) {
-                    return [2 /*return*/, res
-                            .status(500)
-                            .json({
-                            status: "Error 500 : Internal server error",
-                            error: error,
-                        })];
-                }
-                return [2 /*return*/];
             });
         });
     };
@@ -203,39 +224,28 @@ var Account = /** @class */ (function () {
         return __awaiter(this, void 0, void 0, function () {
             var id;
             return __generator(this, function (_a) {
-                try {
-                    id = req.params.id;
-                    return [2 /*return*/, schemaUser_1.User.find({ _id: id }, { _id: 1, pseudo: 1, email: 1 })
-                            .then(function (userInfo) {
-                            return res
-                                .status(200)
-                                .json({
-                                status: "200 : Request completed",
-                                userInfo: userInfo,
-                            });
-                        })
-                            .catch(function (err) {
-                            return res
-                                .status(400)
-                                .json({
-                                status: "400 : Bad Request",
-                                err: err,
-                            });
-                        })];
-                }
-                catch (err) {
-                    return [2 /*return*/, res
-                            .status(500)
+                id = req.params.id;
+                return [2 /*return*/, schemaUser_1.User.find({ _id: id }, { _id: 1, pseudo: 1, email: 1 })
+                        .then(function (userInfo) {
+                        return res
+                            .status(200)
                             .json({
-                            status: "Error 500 : Internal server error",
+                            status: "200 : Request completed",
+                            userInfo: userInfo,
+                        });
+                    })
+                        .catch(function (err) {
+                        return res
+                            .status(400)
+                            .json({
+                            status: "400 : Bad Request",
                             err: err,
-                        })];
-                }
-                return [2 /*return*/];
+                        });
+                    })];
             });
         });
     };
-    Account.updateUserPseudo = function (req, res) {
+    Account.updateUserById = function (req, res) {
         return __awaiter(this, void 0, void 0, function () {
             var id_1, updatedValues_1;
             return __generator(this, function (_a) {

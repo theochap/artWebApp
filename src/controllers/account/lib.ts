@@ -1,35 +1,25 @@
 import { User } from "../../schema/schemaUser";
 import { Config } from "../../config/config";
 import passwordHash = require("password-hash");
-
-const jwt = require("jwt-simple");
+const jwt = require("jsonwebtoken");
 const burl = "localhost:8080";
 
 export class Account {
-	static async auth(req, res) {
-		const token: string = req.body.token;
-
-		if (token) {
-			const decode = jwt.verify(token, Config.secret)
-
-			return res.status(200)
-				.json({
-					text: "Successful authentification",
-					data: decode
-				})
-
+	static async authTest(req, res) {
+		if (req.authData) {
+			return res.status(203).json({ text: "Status 203: Access Authorized", data: req.authData });
 		}
 		else {
 			return res.status(400)
 				.json({
-					text: "Error 400: Bad Request"
+					error: "Error 400: Bad Request"
 				})
 		}
 
 
 	}
 
-	static async signup(req, res) {
+	static async signup(req, res): Promise<any> {
 		const { password, pseudo, email }: { password: string, pseudo: string, email: string } = req.body;
 
 		if (!email || !password || !pseudo) {
@@ -131,8 +121,11 @@ export class Account {
 	}
 
 	static async delUser(req, res): Promise<any> {
-		try {
-			const id = req.params.id;
+		const id = req.params.id;
+		const token = req.token;
+
+		if (token) {
+			const decode = await jwt.verify(token, Config.secret)
 			return User.remove({ _id: id })
 				.then((result) =>
 					res
@@ -150,47 +143,40 @@ export class Account {
 							err: err,
 						})
 				);
-		} catch (error) {
-			return res
-				.status(500)
-				.json({
-					status: "Error 500 : Internal server error",
-					error: error,
-				});
 		}
+
+		else {
+			res.status(400).json({
+				text: "Error 400, Wrong token"
+			})
+		}
+
 	}
 
+
 	static async getUserById(req, res): Promise<any> {
-		try {
-			const id = req.params.id;
-			return User.find(
-				{ _id: id },
-				{ _id: 1, pseudo: 1, email: 1 }
+		const id = req.params.id;
+		return User.find(
+			{ _id: id },
+			{ _id: 1, pseudo: 1, email: 1 }
+		)
+			.then((userInfo) =>
+				res
+					.status(200)
+					.json({
+						status: "200 : Request completed",
+						userInfo,
+					})
 			)
-				.then((userInfo) =>
-					res
-						.status(200)
-						.json({
-							status: "200 : Request completed",
-							userInfo,
-						})
-				)
-				.catch((err) =>
-					res
-						.status(400)
-						.json({
-							status: "400 : Bad Request",
-							err,
-						})
-				);
-		} catch (err) {
-			return res
-				.status(500)
-				.json({
-					status: "Error 500 : Internal server error",
-					err,
-				});
-		}
+			.catch((err) =>
+				res
+					.status(400)
+					.json({
+						status: "400 : Bad Request",
+						err,
+					})
+			);
+
 	}
 
 	static async updateUserById(req, res): Promise<any> {

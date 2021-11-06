@@ -3,14 +3,18 @@
 import cors = require('cors');
 import express from "express";
 import mongoose = require("mongoose");
+import { PublicUserMiddleware, PrivateUserMiddleware } from "./controllers/userController"
+import { Authentificate } from './controllers/userAuthentification';
+import { PublicWallMiddleware, PrivateWallMiddleware } from './controllers/wallController';
+
 // Connexion à la base de données
 
 mongoose
 	.connect("mongodb://localhost/db")
-	.then( () => {
+	.then(() => {
 		console.log("Connected");
 	})
-	.catch( e => {
+	.catch(e => {
 		console.log("Error during the connection");
 		console.log(e);
 	});
@@ -37,15 +41,24 @@ app.use(express.json());
 
 // Définition d'un routeur
 
-const router = express.Router();
-app.use("/users", router);
-require(__dirname + "/controllers/userController")(router);
+const privateUserRouter = express.Router();
+PrivateUserMiddleware(privateUserRouter);
+app.use("/users/private", Authentificate.parseToken, Authentificate.authMiddleware, privateUserRouter);
 
-const wallRouter = express.Router();
-app.use("/wall", wallRouter);
-require(__dirname + "/controllers/wallController")(wallRouter);
+const publicUserRouter = express.Router();
+PublicUserMiddleware(publicUserRouter);
+app.use("/users", publicUserRouter);
 
-app.get("/", (req, res) => {res.status(200).json({ text : "Succes"})});
+const publicWallRouter = express.Router();
+PublicWallMiddleware(publicWallRouter);
+app.use("/wall", publicWallRouter);
+
+const privateWallRouter = express.Router();
+PrivateWallMiddleware(privateWallRouter);
+app.use("/wall/private", privateWallRouter);
+
+
+app.get("/", (req, res) => { res.status(200).json({ text: "Succes" }) });
 
 // Ecoute sur le port 8080
 //
