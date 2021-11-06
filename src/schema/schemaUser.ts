@@ -1,19 +1,18 @@
 import mongoose = require("mongoose");
 import passwordHash = require("password-hash");
 import jwt = require("jwt-simple");
-import {Config} from "../config/config";
+import { Config } from "../config/config";
 
 const userSchema = new mongoose.Schema(
-
 	{
-		pseudo:{
-			type : String,
+		pseudo: {
+			type: String,
 			required: true,
 			unique: true
 		},
 
-		email:{
-			type : String,
+		email: {
+			type: String,
 			lowercase: true,
 			trim: true,
 			unique: true,
@@ -23,20 +22,23 @@ const userSchema = new mongoose.Schema(
 		password: {
 			type: String,
 			required: true
+		},
+
+		createdAt: {
+			type: Date,
+			default: Date.now
 		}
-	},
-	
-	{ timestamps: {createdAt: "created_at"} }
-	
+	}
+
 );
 
 userSchema.methods = {
-	authenticate : function(password){
+	authenticate: function (password) {
 		return passwordHash.verify(password, this.password);
 
 	},
-	getToken: function() {
-		const data = { id: this._id }; 
+	getToken: function () {
+		const data = { id: this._id };
 		return jwt.encode(data, Config.secret);
 	},
 

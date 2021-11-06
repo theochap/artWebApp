@@ -10,7 +10,7 @@ import { PublicWallMiddleware, PrivateWallMiddleware } from './controllers/wallC
 // Connexion à la base de données
 
 mongoose
-	.connect("mongodb://localhost/db")
+	.connect("mongodb://localhost/ArteFact")
 	.then(() => {
 		console.log("Connected");
 	})
@@ -55,7 +55,7 @@ app.use("/wall", publicWallRouter);
 
 const privateWallRouter = express.Router();
 PrivateWallMiddleware(privateWallRouter);
-app.use("/wall/private", privateWallRouter);
+app.use("/wall/private", Authentificate.parseToken, Authentificate.authMiddleware, privateWallRouter);
 
 
 app.get("/", (req, res) => { res.status(200).json({ text: "Succes" }) });

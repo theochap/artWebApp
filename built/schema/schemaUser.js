@@ -21,8 +21,12 @@ var userSchema = new mongoose.Schema({
     password: {
         type: String,
         required: true
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now
     }
-}, { timestamps: { createdAt: "created_at" } });
+});
 userSchema.methods = {
     authenticate: function (password) {
         return passwordHash.verify(password, this.password);

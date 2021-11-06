@@ -38,7 +38,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Account = void 0;
 var schemaUser_1 = require("../../schema/schemaUser");
-var config_1 = require("../../config/config");
+var schemaWall_1 = require("../../schema/schemaWall");
 var passwordHash = require("password-hash");
 var jwt = require("jsonwebtoken");
 var burl = "localhost:8080";
@@ -49,7 +49,7 @@ var Account = /** @class */ (function () {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
                 if (req.authData) {
-                    return [2 /*return*/, res.status(203).json({ text: "Status 203: Access Authorized", data: req.authData })];
+                    return [2 /*return*/, res.status(203).json({ text: "Status 200: Access Authorized", data: req.authData })];
                 }
                 else {
                     return [2 /*return*/, res.status(400)
@@ -78,6 +78,7 @@ var Account = /** @class */ (function () {
                             email: email,
                             pseudo: pseudo,
                             password: passwordHash.generate(password),
+                            toConfirm: []
                         };
                         _b.label = 1;
                     case 1:
@@ -181,41 +182,58 @@ var Account = /** @class */ (function () {
             });
         });
     };
-    Account.delUser = function (req, res) {
+    /* For testing purposes only */
+    Account.delAll = function (req, res) {
         return __awaiter(this, void 0, void 0, function () {
-            var id, token, decode;
+            var error_4;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        id = req.params.id;
-                        token = req.token;
-                        if (!token) return [3 /*break*/, 2];
-                        return [4 /*yield*/, jwt.verify(token, config_1.Config.secret)];
+                        _a.trys.push([0, 2, , 3]);
+                        return [4 /*yield*/, schemaUser_1.User.deleteMany()];
                     case 1:
-                        decode = _a.sent();
-                        return [2 /*return*/, schemaUser_1.User.remove({ _id: id })
-                                .then(function (result) {
-                                return res
-                                    .status(200)
-                                    .json({
-                                    text: "User deleted successfully",
-                                    result: result,
-                                });
-                            })
-                                .catch(function (err) {
-                                return res
-                                    .status(400)
-                                    .json({
-                                    status: "400",
-                                    err: err,
-                                });
-                            })];
+                        _a.sent();
+                        return [2 /*return*/, res.status(200).json({ text: "Succès" })];
                     case 2:
-                        res.status(400).json({
-                            text: "Error 400, Wrong token"
-                        });
-                        _a.label = 3;
+                        error_4 = _a.sent();
+                        res.status(400).json({ err: error_4 });
+                        return [3 /*break*/, 3];
                     case 3: return [2 /*return*/];
+                }
+            });
+        });
+    };
+    Account.delUser = function (req, res) {
+        return __awaiter(this, void 0, void 0, function () {
+            var id, delWall, delUser, err_1;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        _a.trys.push([0, 3, , 4]);
+                        id = req.authData.id;
+                        return [4 /*yield*/, schemaWall_1.Wall.remove({ authors: { $in: [id] } })];
+                    case 1:
+                        delWall = _a.sent();
+                        return [4 /*yield*/, schemaUser_1.User.remove({ _id: id })];
+                    case 2:
+                        delUser = _a.sent();
+                        return [2 /*return*/, res
+                                .status(200)
+                                .json({
+                                text: "User deleted successfully",
+                                delUser: delUser,
+                                delWall: delWall
+                            })];
+                    case 3:
+                        err_1 = _a.sent();
+                        res
+                            .status(400)
+                            .json({
+                            status: "400",
+                            err: err_1,
+                        });
+                        return [3 /*break*/, 4];
+                    case 4: return [2 /*return*/];
                 }
             });
         });
@@ -250,7 +268,7 @@ var Account = /** @class */ (function () {
             var id_1, updatedValues_1;
             return __generator(this, function (_a) {
                 try {
-                    id_1 = req.params.id;
+                    id_1 = req.authData.id;
                     updatedValues_1 = {};
                     Object.keys(req.body).forEach(function (field) {
                         if (field == "password") {

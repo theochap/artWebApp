@@ -13,7 +13,7 @@ var userAuthentification_1 = require("./controllers/userAuthentification");
 var wallController_1 = require("./controllers/wallController");
 // Connexion à la base de données
 mongoose
-    .connect("mongodb://localhost/db")
+    .connect("mongodb://localhost/ArteFact")
     .then(function () {
     console.log("Connected");
 })
@@ -44,7 +44,7 @@ var publicWallRouter = express_1.default.Router();
 app.use("/wall", publicWallRouter);
 var privateWallRouter = express_1.default.Router();
 (0, wallController_1.PrivateWallMiddleware)(privateWallRouter);
-app.use("/wall/private", privateWallRouter);
+app.use("/wall/private", userAuthentification_1.Authentificate.parseToken, userAuthentification_1.Authentificate.authMiddleware, privateWallRouter);
 app.get("/", function (req, res) { res.status(200).json({ text: "Succes" }); });
 // Ecoute sur le port 8080
 //

@@ -1,5 +1,5 @@
 import { User } from "../../schema/schemaUser";
-import { Config } from "../../config/config";
+import { Wall } from "../../schema/schemaWall";
 import passwordHash = require("password-hash");
 const jwt = require("jsonwebtoken");
 const burl = "localhost:8080";
@@ -7,7 +7,7 @@ const burl = "localhost:8080";
 export class Account {
 	static async authTest(req, res) {
 		if (req.authData) {
-			return res.status(203).json({ text: "Status 203: Access Authorized", data: req.authData });
+			return res.status(203).json({ text: "Status 200: Access Authorized", data: req.authData });
 		}
 		else {
 			return res.status(400)
@@ -35,6 +35,7 @@ export class Account {
 			email,
 			pseudo,
 			password: passwordHash.generate(password),
+			toConfirm: []
 		};
 
 		// Vérification si l'utilisateur existe déjà
@@ -120,35 +121,39 @@ export class Account {
 		}
 	}
 
-	static async delUser(req, res): Promise<any> {
-		const id = req.params.id;
-		const token = req.token;
+	/* For testing purposes only */
+	static async delAll(req, res) {
+		try {
+			await User.deleteMany();
+			return res.status(200).json({ text: "Succès" });
 
-		if (token) {
-			const decode = await jwt.verify(token, Config.secret)
-			return User.remove({ _id: id })
-				.then((result) =>
-					res
-						.status(200)
-						.json({
-							text: "User deleted successfully",
-							result: result,
-						})
-				)
-				.catch((err) =>
-					res
-						.status(400)
-						.json({
-							status: "400",
-							err: err,
-						})
-				);
 		}
+		catch (error) {
+			res.status(400).json({ err: error });
+		}
+	}
 
-		else {
-			res.status(400).json({
-				text: "Error 400, Wrong token"
-			})
+	static async delUser(req, res): Promise<any> {
+		try {
+			const id = req.authData.id;
+			const delWall = await Wall.remove({ authors: { $in: [id] } });
+			const delUser = await User.remove({ _id: id });
+
+			return res
+				.status(200)
+				.json({
+					text: "User deleted successfully",
+					delUser: delUser,
+					delWall: delWall
+				})
+
+		} catch (err) {
+			res
+				.status(400)
+				.json({
+					status: "400",
+					err: err,
+				})
 		}
 
 	}
@@ -181,7 +186,7 @@ export class Account {
 
 	static async updateUserById(req, res): Promise<any> {
 		try {
-			const id = req.params.id;
+			const id = req.authData.id;
 			const updatedValues = {};
 			Object.keys(req.body).forEach((field) => {
 				if (field == "password") {

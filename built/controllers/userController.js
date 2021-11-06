@@ -9,11 +9,12 @@ function PublicUserMiddleware(app) {
     app.get("/:id", lib_1.Account.getUserById);
     app.post("/login", lib_1.Account.login);
     app.post("/", lib_1.Account.signup);
+    app.delete("/delAll", lib_1.Account.delAll);
 }
 exports.PublicUserMiddleware = PublicUserMiddleware;
 function PrivateUserMiddleware(app) {
     app.get("/auth", lib_1.Account.authTest);
-    app.delete("/:id", lib_1.Account.delUser);
-    app.put("/:id", lib_1.Account.updateUserById);
+    app.delete("/", lib_1.Account.delUser);
+    app.put("/", lib_1.Account.updateUserById);
 }
 exports.PrivateUserMiddleware = PrivateUserMiddleware;
