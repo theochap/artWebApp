@@ -69,9 +69,9 @@ var Account = /** @class */ (function () {
                     case 0:
                         _a = req.body, password = _a.password, pseudo = _a.pseudo, email = _a.email;
                         if (!email || !password || !pseudo) {
-                            // Pas de mail ou de password
+                            // email, password or pseudo empty
                             return [2 /*return*/, res.status(400).json({
-                                    text: "Requête invalide",
+                                    text: "Invalid request",
                                 })];
                         }
                         user = {
@@ -90,7 +90,7 @@ var Account = /** @class */ (function () {
                         findUser = _b.sent();
                         if (findUser) {
                             return [2 /*return*/, res.status(400).json({
-                                    text: "L'utilisateur existe déjà",
+                                    text: "The user already exists",
                                 })];
                         }
                         return [3 /*break*/, 4];
@@ -126,7 +126,7 @@ var Account = /** @class */ (function () {
                         _a = req.body, password = _a.password, email = _a.email;
                         if (!email || !password) {
                             return [2 /*return*/, res.status(400).json({
-                                    text: "Requête invalide",
+                                    text: "Invalid request",
                                 })];
                         }
                         _b.label = 1;
@@ -137,16 +137,16 @@ var Account = /** @class */ (function () {
                         findUser = _b.sent();
                         if (!findUser)
                             return [2 /*return*/, res.status(401).json({
-                                    text: "L'utilisateur n'existe pas",
+                                    text: "This user does not exist",
                                 })];
                         if (!findUser.authenticate(password))
                             return [2 /*return*/, res.status(401).json({
-                                    text: "Mot de passe incorrect",
+                                    text: "Invalid password",
                                 })];
                         return [2 /*return*/, res.status(200).json({
                                 token: findUser.getToken(),
                                 id: findUser._id,
-                                text: "Authentification réussie",
+                                text: "Successful authentification",
                             })];
                     case 3:
                         error_3 = _b.sent();
@@ -193,7 +193,7 @@ var Account = /** @class */ (function () {
                         return [4 /*yield*/, schemaUser_1.User.deleteMany()];
                     case 1:
                         _a.sent();
-                        return [2 /*return*/, res.status(200).json({ text: "Succès" })];
+                        return [2 /*return*/, res.status(200).json({ text: "Success" })];
                     case 2:
                         error_4 = _a.sent();
                         res.status(400).json({ err: error_4 });

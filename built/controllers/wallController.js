@@ -8,7 +8,8 @@ function PublicWallMiddleware(app) {
 }
 exports.PublicWallMiddleware = PublicWallMiddleware;
 function PrivateWallMiddleware(app) {
-    app.post("/add", lib_js_1.Wall.add);
-    app.delete("/del", lib_js_1.Wall.del);
+    app.post("/", lib_js_1.Wall.add);
+    app.delete("/", lib_js_1.Wall.del);
+    app.put("/", lib_js_1.Wall.put);
 }
 exports.PrivateWallMiddleware = PrivateWallMiddleware;

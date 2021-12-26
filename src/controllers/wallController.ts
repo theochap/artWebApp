@@ -6,6 +6,7 @@ export function PublicWallMiddleware(app) {
 }
 
 export function PrivateWallMiddleware(app) {
-	app.post("/add", Wall.add);
-	app.delete("/del", Wall.del);
+	app.post("/", Wall.add);
+	app.delete("/", Wall.del);
+	app.put("/", Wall.put)
 }
