@@ -23,13 +23,13 @@ export class Account {
 		const { password, pseudo, email }: { password: string, pseudo: string, email: string } = req.body;
 
 		if (!email || !password || !pseudo) {
-			// Pas de mail ou de password
+			// email, password or pseudo empty
 			return res.status(400).json({
-				text: "Requête invalide",
+				text: "Invalid request",
 			});
 		}
 
-		// Création d'un user, dans lequel on hash son mot de passe
+		// create a user, and hash his password
 
 		const user = {
 			email,
@@ -38,14 +38,14 @@ export class Account {
 			toConfirm: []
 		};
 
-		// Vérification si l'utilisateur existe déjà
+		// verify that a user already exists
 		try {
 			const findUser = await User.findOne({
 				email,
 			});
 			if (findUser) {
 				return res.status(400).json({
-					text: "L'utilisateur existe déjà",
+					text: "The user already exists",
 				});
 			}
 		} catch (error) {
@@ -53,7 +53,7 @@ export class Account {
 		}
 
 		try {
-			// Sauvegarde si l'user n'existe pas
+			// Save if the user does not exist
 			const userData = new User(user);
 			const userObject = await userData.save();
 			res.location(
@@ -74,26 +74,26 @@ export class Account {
 		const { password, email }: { password: string, email: string } = req.body;
 		if (!email || !password) {
 			return res.status(400).json({
-				text: "Requête invalide",
+				text: "Invalid request",
 			});
 		}
 		try {
-			// Vérification si l'utilisateur existe
+			// Verify that the user exists
 
 			const findUser = await User.findOne({ email });
 			if (!findUser)
 				return res.status(401).json({
-					text: "L'utilisateur n'existe pas",
+					text: "This user does not exist",
 				});
 			if (!findUser.authenticate(password))
 				return res.status(401).json({
-					text: "Mot de passe incorrect",
+					text: "Invalid password",
 				});
 
 			return res.status(200).json({
 				token: findUser.getToken(),
 				id: findUser._id,
-				text: "Authentification réussie",
+				text: "Successful authentification",
 			});
 		} catch (error) {
 			return res.status(500).json({
@@ -125,7 +125,7 @@ export class Account {
 	static async delAll(req, res) {
 		try {
 			await User.deleteMany();
-			return res.status(200).json({ text: "Succès" });
+			return res.status(200).json({ text: "Success" });
 
 		}
 		catch (error) {

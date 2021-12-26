@@ -69,7 +69,7 @@ export class Wall {
 	static async delAll(req, res) {
 		try {
 			await WallSchema.deleteMany();
-			return res.status(200).json({ text: "Succès" });
+			return res.status(200).json({ text: "Success" });
 
 		}
 		catch (error) {
@@ -83,7 +83,7 @@ export class Wall {
 			const id = (req.body.id);
 			await WallSchema.deleteOne({ "_id": new ObjectId(id) });
 
-			return res.status(200).json({ text: "Succès" });
+			return res.status(200).json({ text: "Success" });
 
 		}
 		catch (error) {
