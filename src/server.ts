@@ -49,16 +49,15 @@ const publicUserRouter = express.Router();
 PublicUserMiddleware(publicUserRouter);
 app.use("/users", publicUserRouter);
 
-const publicWallRouter = express.Router();
-PublicWallMiddleware(publicWallRouter);
-app.use("/wall", publicWallRouter);
-
 const privateWallRouter = express.Router();
 PrivateWallMiddleware(privateWallRouter);
 app.use("/wall/private", Authentificate.parseToken, Authentificate.authMiddleware, privateWallRouter);
 
+const publicWallRouter = express.Router();
+PublicWallMiddleware(publicWallRouter);
+app.use("/wall", publicWallRouter);
 
-app.get("/", (req, res) => { res.status(200).json({ text: "Succes" }) });
+app.get("/", (req, res) => { res.status(200).json({ text: "Status 200: Success" }) });
 
 // Ecoute sur le port 8080
 //

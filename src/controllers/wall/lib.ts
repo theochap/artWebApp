@@ -95,20 +95,20 @@ export class Wall {
 					visible = true;
 				}
 
-				return res.status(200).json({ text: "200: Success", validators: finalPostData.validators, visible: visible });
+				return res.status(200).json({ text: "Status 200: Success", validators: finalPostData.validators, visible: visible });
 
 			} catch (error) {
-				return res.status(410).json({ text: "Error 410, the ressource you are trying to access is not available anymore", error: error });
+				return res.status(410).json({ text: "Error 410: the ressource you are trying to access is not available anymore", error: error });
 			}
 
 		} catch (error) {
-			return res.status(404).json({ text: "Error 404, not found", error: error });
+			return res.status(404).json({ text: "Error 404: not found", error: error });
 		}
 	}
 
 	static async put(req, res) {
 		const thisAuthorId = req.authData.id;
-		const postId = req.body.id;
+		const postId = req.body.postId;
 		const updatedValues = {};
 
 		Object.keys(req.body).forEach((key) => {
@@ -122,7 +122,7 @@ export class Wall {
 		if (updatedValues) {
 			try {
 				const wallPost = await WallSchema.findOneAndUpdate({ $and: [{ _id: postId }, { "authors": thisAuthorId }] }, updatedValues);
-				return res.status(200).json({ text: "Success", data: wallPost });
+				return res.status(200).json({ text: "Status 200: Success", data: wallPost });
 			} catch (error) {
 				return res.status(404).json({ text: "Error 404: Ressource not found, unable to modify" });
 			}
@@ -134,7 +134,7 @@ export class Wall {
 	static async get(req, res) {
 		try {
 
-			await WallSchema.find().then(posts => res.json(posts)).catch(err => res.status(404).json({ err: "No posts found" }));
+			await WallSchema.find().then(posts => res.json(posts)).catch(err => res.status(400).json({ err: "Error 400: Bad request, no posts found" }));
 
 		} catch (error) {
 			return res.status(500).json({
@@ -148,7 +148,7 @@ export class Wall {
 	static async delAll(req, res) {
 		try {
 			await WallSchema.deleteMany();
-			return res.status(200).json({ text: "Success" });
+			return res.status(200).json({ text: "Status 200: Success" });
 
 		}
 		catch (error) {
@@ -162,7 +162,7 @@ export class Wall {
 			const id = (req.body.id);
 			await WallSchema.deleteOne({ "_id": new ObjectId(id) });
 
-			return res.status(200).json({ text: "Success" });
+			return res.status(200).json({ text: "Status 200: Success" });
 
 		}
 		catch (error) {

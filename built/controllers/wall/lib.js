@@ -132,14 +132,14 @@ var Wall = /** @class */ (function () {
                         updatedVisible = _a.sent();
                         visible = true;
                         _a.label = 6;
-                    case 6: return [2 /*return*/, res.status(200).json({ text: "200: Success", validators: finalPostData.validators, visible: visible })];
+                    case 6: return [2 /*return*/, res.status(200).json({ text: "Status 200: Success", validators: finalPostData.validators, visible: visible })];
                     case 7:
                         error_2 = _a.sent();
-                        return [2 /*return*/, res.status(410).json({ text: "Error 410, the ressource you are trying to access is not available anymore", error: error_2 })];
+                        return [2 /*return*/, res.status(410).json({ text: "Error 410: the ressource you are trying to access is not available anymore", error: error_2 })];
                     case 8: return [3 /*break*/, 10];
                     case 9:
                         error_3 = _a.sent();
-                        return [2 /*return*/, res.status(404).json({ text: "Error 404, not found", error: error_3 })];
+                        return [2 /*return*/, res.status(404).json({ text: "Error 404: not found", error: error_3 })];
                     case 10: return [2 /*return*/];
                 }
             });
@@ -152,7 +152,7 @@ var Wall = /** @class */ (function () {
                 switch (_a.label) {
                     case 0:
                         thisAuthorId = req.authData.id;
-                        postId = req.body.id;
+                        postId = req.body.postId;
                         updatedValues = {};
                         Object.keys(req.body).forEach(function (key) {
                             if (["title", "body"].includes(key)) {
@@ -167,7 +167,7 @@ var Wall = /** @class */ (function () {
                         return [4 /*yield*/, schemaWall_js_1.Wall.findOneAndUpdate({ $and: [{ _id: postId }, { "authors": thisAuthorId }] }, updatedValues)];
                     case 2:
                         wallPost = _a.sent();
-                        return [2 /*return*/, res.status(200).json({ text: "Success", data: wallPost })];
+                        return [2 /*return*/, res.status(200).json({ text: "Status 200: Success", data: wallPost })];
                     case 3:
                         error_4 = _a.sent();
                         return [2 /*return*/, res.status(404).json({ text: "Error 404: Ressource not found, unable to modify" })];
@@ -183,7 +183,7 @@ var Wall = /** @class */ (function () {
                 switch (_a.label) {
                     case 0:
                         _a.trys.push([0, 2, , 3]);
-                        return [4 /*yield*/, schemaWall_js_1.Wall.find().then(function (posts) { return res.json(posts); }).catch(function (err) { return res.status(404).json({ err: "No posts found" }); })];
+                        return [4 /*yield*/, schemaWall_js_1.Wall.find().then(function (posts) { return res.json(posts); }).catch(function (err) { return res.status(400).json({ err: "Error 400: Bad request, no posts found" }); })];
                     case 1:
                         _a.sent();
                         return [3 /*break*/, 3];
@@ -208,7 +208,7 @@ var Wall = /** @class */ (function () {
                         return [4 /*yield*/, schemaWall_js_1.Wall.deleteMany()];
                     case 1:
                         _a.sent();
-                        return [2 /*return*/, res.status(200).json({ text: "Success" })];
+                        return [2 /*return*/, res.status(200).json({ text: "Status 200: Success" })];
                     case 2:
                         error_6 = _a.sent();
                         res.status(400).json({ err: error_6 });
@@ -229,7 +229,7 @@ var Wall = /** @class */ (function () {
                         return [4 /*yield*/, schemaWall_js_1.Wall.deleteOne({ "_id": new mongodb_1.ObjectId(id) })];
                     case 1:
                         _a.sent();
-                        return [2 /*return*/, res.status(200).json({ text: "Success" })];
+                        return [2 /*return*/, res.status(200).json({ text: "Status 200: Success" })];
                     case 2:
                         error_7 = _a.sent();
                         res.status(400).json({ err: error_7 });

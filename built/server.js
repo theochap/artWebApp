@@ -39,13 +39,13 @@ app.use("/users/private", userAuthentification_1.Authentificate.parseToken, user
 var publicUserRouter = express_1.default.Router();
 (0, userController_1.PublicUserMiddleware)(publicUserRouter);
 app.use("/users", publicUserRouter);
-var publicWallRouter = express_1.default.Router();
-(0, wallController_1.PublicWallMiddleware)(publicWallRouter);
-app.use("/wall", publicWallRouter);
 var privateWallRouter = express_1.default.Router();
 (0, wallController_1.PrivateWallMiddleware)(privateWallRouter);
 app.use("/wall/private", userAuthentification_1.Authentificate.parseToken, userAuthentification_1.Authentificate.authMiddleware, privateWallRouter);
-app.get("/", function (req, res) { res.status(200).json({ text: "Succes" }); });
+var publicWallRouter = express_1.default.Router();
+(0, wallController_1.PublicWallMiddleware)(publicWallRouter);
+app.use("/wall", publicWallRouter);
+app.get("/", function (req, res) { res.status(200).json({ text: "Status 200: Success" }); });
 // Ecoute sur le port 8080
 //
 var port = 8080;
