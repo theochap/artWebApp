@@ -5,6 +5,7 @@ var mongoose = require("mongoose");
 var passwordHash = require("password-hash");
 var jwt = require("jwt-simple");
 var config_1 = require("../config/config");
+var mongodb_1 = require("mongodb");
 var userSchema = new mongoose.Schema({
     pseudo: {
         type: String,
@@ -22,6 +23,28 @@ var userSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    lastPosts: [{
+            postId: {
+                type: mongodb_1.ObjectId,
+                required: true
+            },
+            authors: [{
+                    type: String,
+                    required: true
+                }],
+            title: {
+                type: String,
+                required: true
+            },
+            body: {
+                type: String,
+                required: true
+            },
+            timestamp: {
+                type: Date,
+                required: true
+            },
+        }],
     createdAt: {
         type: Date,
         default: Date.now

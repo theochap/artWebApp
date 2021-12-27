@@ -29,7 +29,18 @@ const wallSchema = new mongoose.Schema(
 			type: Boolean,
 			required: true,
 			default: false
-		}
+		},
+
+		validators: [{
+			author: {
+				type: String,
+				required: true
+			},
+			validate: {
+				type: Boolean,
+				required: true
+			}
+		}]
 	}
 );
 

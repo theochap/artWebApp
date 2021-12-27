@@ -2,6 +2,7 @@ import mongoose = require("mongoose");
 import passwordHash = require("password-hash");
 import jwt = require("jwt-simple");
 import { Config } from "../config/config";
+import { ObjectId } from "mongodb";
 
 const userSchema = new mongoose.Schema(
 	{
@@ -23,6 +24,29 @@ const userSchema = new mongoose.Schema(
 			type: String,
 			required: true
 		},
+
+		lastPosts: [{
+			postId: {
+				type: ObjectId,
+				required: true
+			},
+			authors: [{
+				type: String,
+				required: true
+			}],
+			title: {
+				type: String,
+				required: true
+			},
+			body: {
+				type: String,
+				required: true
+			},
+			timestamp: {
+				type: Date,
+				required: true
+			},
+		}],
 
 		createdAt: {
 			type: Date,
