@@ -102,25 +102,6 @@ export class Account {
 		}
 	}
 
-	static async getUsers(req, res): Promise<any> {
-		try {
-			return User.find()
-				.then((users) =>
-					res
-						.status(200)
-						.json({
-							text: "Users retrieved successfully",
-							users: users,
-						})
-				)
-				.catch((err) => res.status(400).json({ err }));
-		} catch (error) {
-			return res.status(500).json({
-				error,
-			});
-		}
-	}
-
 	/* For testing purposes only */
 	static async delAll(req, res) {
 		try {
@@ -159,29 +140,26 @@ export class Account {
 	}
 
 
-	static async getUserById(req, res): Promise<any> {
-		const id = req.params.id;
-		return User.find(
-			{ _id: id },
-			{ _id: 1, pseudo: 1, email: 1 }
-		)
-			.then((userInfo) =>
-				res
-					.status(200)
-					.json({
-						status: "200 : Request completed",
-						userInfo,
-					})
-			)
-			.catch((err) =>
-				res
-					.status(400)
-					.json({
-						status: "400 : Bad Request",
-						err,
-					})
-			);
+	static async get(req, res): Promise<any> {
 
+		const reqParams = req.query;
+		try {
+
+			const userData = await (User.find(reqParams, { _id: 1, pseudo: 1, email: 1 }));
+
+			return res.status(200)
+				.json({
+					status: "200 : Request completed",
+					userData,
+				});
+
+		} catch (err) {
+			return res.status(400)
+				.json({
+					status: "400 : Bad Request",
+					err,
+				})
+		}
 	}
 
 	static async updateUserById(req, res): Promise<any> {
@@ -205,7 +183,6 @@ export class Account {
 				}
 			});
 
-			console.log(updatedValues);
 			if (updatedValues) {
 				return User.updateOne(
 					{ _id: id },

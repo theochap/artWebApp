@@ -7,7 +7,7 @@ import { PublicUserMiddleware, PrivateUserMiddleware } from "./controllers/userC
 import { Authentificate } from './controllers/userAuthentification';
 import { PublicWallMiddleware, PrivateWallMiddleware } from './controllers/wallController';
 
-// Connexion à la base de données
+// Database connection
 
 mongoose
 	.connect("mongodb://localhost/ArteFact")
@@ -21,7 +21,7 @@ mongoose
 
 
 
-// Creation d'une app express
+// Create an express app
 
 const app = express();
 
@@ -33,13 +33,13 @@ const urlencodedParser = express.urlencoded({
 
 });
 
-//Définition des CORS
+// CORS definition
 app.use(cors());
 
 app.use(urlencodedParser);
 app.use(express.json());
 
-// Définition d'un routeur
+// Router definition
 
 const privateUserRouter = express.Router();
 PrivateUserMiddleware(privateUserRouter);
@@ -59,7 +59,7 @@ app.use("/wall", publicWallRouter);
 
 app.get("/", (req, res) => { res.status(200).json({ text: "Status 200: Success" }) });
 
-// Ecoute sur le port 8080
+// Listen on port 8080
 //
 
 const port = 8080;

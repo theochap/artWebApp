@@ -13,11 +13,7 @@ export class Wall {
 	static async add(req, res) {
 
 		const thisAuthorId = req.authData.id;
-		console.log("thisAuthorId " + thisAuthorId);
 		const { title, body, authors } = req.body;
-		console.log("title " + title);
-		console.log("body " + body);
-		console.log("authors " + authors);
 
 		if (!title || !body || !authors || !(authors.includes(thisAuthorId))) {
 			//No title / body / Authors / publisher is not an author
@@ -117,8 +113,6 @@ export class Wall {
 			}
 		});
 
-		console.log(updatedValues);
-
 		if (updatedValues) {
 			try {
 				const wallPost = await WallSchema.findOneAndUpdate({ $and: [{ _id: postId }, { "authors": thisAuthorId }] }, updatedValues);
@@ -133,11 +127,14 @@ export class Wall {
 
 	static async get(req, res) {
 		try {
+			const reqParams = req.query;
 
-			await WallSchema.find().then(posts => res.json(posts)).catch(err => res.status(400).json({ err: "Error 400: Bad request, no posts found" }));
+			const wallPosts = await (WallSchema.find(reqParams));
 
+			return res.status(200).json({ text: "Status 200: Success", data: wallPosts });
 		} catch (error) {
-			return res.status(500).json({
+			return res.status(400).json({
+				text: "Error 400: bad request",
 				error
 			}
 			);

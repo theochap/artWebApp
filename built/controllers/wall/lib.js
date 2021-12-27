@@ -50,11 +50,7 @@ var Wall = /** @class */ (function () {
                 switch (_b.label) {
                     case 0:
                         thisAuthorId = req.authData.id;
-                        console.log("thisAuthorId " + thisAuthorId);
                         _a = req.body, title = _a.title, body = _a.body, authors = _a.authors;
-                        console.log("title " + title);
-                        console.log("body " + body);
-                        console.log("authors " + authors);
                         if (!title || !body || !authors || !(authors.includes(thisAuthorId))) {
                             //No title / body / Authors / publisher is not an author
                             return [2 /*return*/, res.status(400).json({
@@ -159,7 +155,6 @@ var Wall = /** @class */ (function () {
                                 updatedValues[key] = req.body[key];
                             }
                         });
-                        console.log(updatedValues);
                         if (!updatedValues) return [3 /*break*/, 4];
                         _a.label = 1;
                     case 1:
@@ -178,18 +173,20 @@ var Wall = /** @class */ (function () {
     };
     Wall.get = function (req, res) {
         return __awaiter(this, void 0, void 0, function () {
-            var error_5;
+            var reqParams, wallPosts, error_5;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
                         _a.trys.push([0, 2, , 3]);
-                        return [4 /*yield*/, schemaWall_js_1.Wall.find().then(function (posts) { return res.json(posts); }).catch(function (err) { return res.status(400).json({ err: "Error 400: Bad request, no posts found" }); })];
+                        reqParams = req.query;
+                        return [4 /*yield*/, (schemaWall_js_1.Wall.find(reqParams))];
                     case 1:
-                        _a.sent();
-                        return [3 /*break*/, 3];
+                        wallPosts = _a.sent();
+                        return [2 /*return*/, res.status(200).json({ text: "Status 200: Success", data: wallPosts })];
                     case 2:
                         error_5 = _a.sent();
-                        return [2 /*return*/, res.status(500).json({
+                        return [2 /*return*/, res.status(400).json({
+                                text: "Error 400: bad request",
                                 error: error_5
                             })];
                     case 3: return [2 /*return*/];

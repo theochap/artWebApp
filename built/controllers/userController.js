@@ -3,13 +3,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.PrivateUserMiddleware = exports.PublicUserMiddleware = void 0;
 var lib_1 = require("./account/lib");
 function PublicUserMiddleware(app) {
-    /* Routes et fonctions associées pour l'api /users
+    /* Routes and functions for the /users api
      */
-    app.get("/", lib_1.Account.getUsers);
-    app.get("/:id", lib_1.Account.getUserById);
+    app.get("/", lib_1.Account.get);
     app.post("/login", lib_1.Account.login);
     app.post("/", lib_1.Account.signup);
-    app.delete("/delAll", lib_1.Account.delAll);
+    app.delete("/", lib_1.Account.delAll);
 }
 exports.PublicUserMiddleware = PublicUserMiddleware;
 function PrivateUserMiddleware(app) {

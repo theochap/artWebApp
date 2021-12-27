@@ -1,13 +1,12 @@
 import { Account } from './account/lib';
 
 export function PublicUserMiddleware(app) {
-	/* Routes et fonctions associées pour l'api /users
+	/* Routes and functions for the /users api
 	 */
-	app.get("/", Account.getUsers);
-	app.get("/:id", Account.getUserById);
+	app.get("/", Account.get);
 	app.post("/login", Account.login);
 	app.post("/", Account.signup);
-	app.delete("/delAll", Account.delAll);
+	app.delete("/", Account.delAll);
 }
 
 export function PrivateUserMiddleware(app) {

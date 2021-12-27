@@ -158,30 +158,6 @@ var Account = /** @class */ (function () {
             });
         });
     };
-    Account.getUsers = function (req, res) {
-        return __awaiter(this, void 0, void 0, function () {
-            return __generator(this, function (_a) {
-                try {
-                    return [2 /*return*/, schemaUser_1.User.find()
-                            .then(function (users) {
-                            return res
-                                .status(200)
-                                .json({
-                                text: "Users retrieved successfully",
-                                users: users,
-                            });
-                        })
-                            .catch(function (err) { return res.status(400).json({ err: err }); })];
-                }
-                catch (error) {
-                    return [2 /*return*/, res.status(500).json({
-                            error: error,
-                        })];
-                }
-                return [2 /*return*/];
-            });
-        });
-    };
     /* For testing purposes only */
     Account.delAll = function (req, res) {
         return __awaiter(this, void 0, void 0, function () {
@@ -238,28 +214,33 @@ var Account = /** @class */ (function () {
             });
         });
     };
-    Account.getUserById = function (req, res) {
+    Account.get = function (req, res) {
         return __awaiter(this, void 0, void 0, function () {
-            var id;
+            var reqParams, userData, err_2;
             return __generator(this, function (_a) {
-                id = req.params.id;
-                return [2 /*return*/, schemaUser_1.User.find({ _id: id }, { _id: 1, pseudo: 1, email: 1 })
-                        .then(function (userInfo) {
-                        return res
-                            .status(200)
-                            .json({
-                            status: "200 : Request completed",
-                            userInfo: userInfo,
-                        });
-                    })
-                        .catch(function (err) {
-                        return res
-                            .status(400)
-                            .json({
-                            status: "400 : Bad Request",
-                            err: err,
-                        });
-                    })];
+                switch (_a.label) {
+                    case 0:
+                        reqParams = req.query;
+                        _a.label = 1;
+                    case 1:
+                        _a.trys.push([1, 3, , 4]);
+                        return [4 /*yield*/, (schemaUser_1.User.find(reqParams, { _id: 1, pseudo: 1, email: 1 }))];
+                    case 2:
+                        userData = _a.sent();
+                        return [2 /*return*/, res.status(200)
+                                .json({
+                                status: "200 : Request completed",
+                                userData: userData,
+                            })];
+                    case 3:
+                        err_2 = _a.sent();
+                        return [2 /*return*/, res.status(400)
+                                .json({
+                                status: "400 : Bad Request",
+                                err: err_2,
+                            })];
+                    case 4: return [2 /*return*/];
+                }
             });
         });
     };
@@ -286,7 +267,6 @@ var Account = /** @class */ (function () {
                             updatedValues_1[field] = req.body[field];
                         }
                     });
-                    console.log(updatedValues_1);
                     if (updatedValues_1) {
                         return [2 /*return*/, schemaUser_1.User.updateOne({ _id: id_1 }, updatedValues_1)
                                 .then(function (result) {
