@@ -1,7 +1,7 @@
 import { ObjectId } from "mongodb";
 
 export interface Validator {
-	author: ObjectId,
+	authorId: ObjectId,
 	validate: boolean
 }
 

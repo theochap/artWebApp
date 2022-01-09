@@ -1,5 +1,6 @@
 import { Posts as PostSchema, Validator } from "../../schema/modelPosts.js";
 import { User as UserSchema } from "../../schema/modelUser.js";
+import { Request, Response } from "express";
 import { Collections } from "../../services/database.service.js";
 import { ObjectId } from 'mongodb';
 
@@ -36,10 +37,10 @@ export class Posts {
 		}
 	}
 
-	static async add(req, res) {
+	static async add(req: Request, res: Response) {
 
 		const thisAuthorId = req.authData.id;
-		const { title, body, authors } = req.body;
+		const { title, body, authorsId: authors }: { title: string, body: string, authorsId: ObjectId[] } = req.body;
 
 		if (!title || !body || !authors || !(authors.includes(thisAuthorId))) {
 			//No title / body / Authors / publisher is not an author
@@ -53,9 +54,9 @@ export class Posts {
 		const validators: Validator[] = new Array();
 
 		// Check the visibility, if the sending author is the only author, set visibility to 1, otherwise init the authorizations and co-authors
-		authors.forEach(author => {
-			console.log(author);
-			var valAuthor: Validator = (author != thisAuthorId) ? { author: author, validate: false } : { author: author, validate: true };
+		authors.forEach(authorId => {
+			console.log(authorId);
+			var valAuthor: Validator = (authorId != thisAuthorId) ? { authorId: authorId, validate: false } : { authorId: authorId, validate: true };
 			validators.push(valAuthor);
 		});
 
@@ -87,17 +88,17 @@ export class Posts {
 		const thisAuthorId = req.authData.id;
 
 		try {
-			const valAuth: Validator = { author: thisAuthorId, validate: true };
+			const valAuth: Validator = { authorId: thisAuthorId, validate: true };
 			const postData = await Collections.posts.findOne({ $and: [{ _id: postId }, { "validators.author": thisAuthorId }] })
 			const updatedValidators: Validator[] = new Array();
 
 			postData.validators.forEach(validator => {
 
 				if (validator.author == thisAuthorId) {
-					updatedValidators.push({ author: thisAuthorId, validate: true });
+					updatedValidators.push({ authorId: thisAuthorId, validate: true });
 				}
 				else {
-					updatedValidators.push({ author: validator.author, validate: validator.validate });
+					updatedValidators.push({ authorId: validator.author, validate: validator.validate });
 				}
 			});
 
