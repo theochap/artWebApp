@@ -12,5 +12,6 @@ function PrivateWallMiddleware(app) {
     app.unlock("/", lib_js_1.Wall.validate);
     app.delete("/", lib_js_1.Wall.del);
     app.put("/", lib_js_1.Wall.put);
+    app.patch("/", lib_js_1.Wall.updatePosts);
 }
 exports.PrivateWallMiddleware = PrivateWallMiddleware;

@@ -224,7 +224,7 @@ var Account = /** @class */ (function () {
                         _a.label = 1;
                     case 1:
                         _a.trys.push([1, 3, , 4]);
-                        return [4 /*yield*/, (schemaUser_1.User.find(reqParams, { _id: 1, pseudo: 1, email: 1 }))];
+                        return [4 /*yield*/, (schemaUser_1.User.find(reqParams, { _id: 1, pseudo: 1, email: 1, lastPosts: 1 }))];
                     case 2:
                         userData = _a.sent();
                         return [2 /*return*/, res.status(200)

@@ -38,14 +38,51 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Wall = void 0;
 var schemaWall_js_1 = require("../../schema/schemaWall.js");
+var schemaUser_1 = require("../../schema/schemaUser");
 var mongodb_1 = require("mongodb");
+var LIMIT_CONST = 15;
 ;
 var Wall = /** @class */ (function () {
     function Wall() {
     }
+    Wall.updatePosts = function (req, res) {
+        return __awaiter(this, void 0, void 0, function () {
+            var thisAuthorId, lastPosts, lastPostsQuery, updatedUser, error_1;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        thisAuthorId = req.authData.id;
+                        _a.label = 1;
+                    case 1:
+                        _a.trys.push([1, 4, , 5]);
+                        lastPosts = new Array();
+                        return [4 /*yield*/, schemaWall_js_1.Wall.find({
+                                $and: [{ "authors": thisAuthorId }, { "visible": true }]
+                            }, {
+                                sort: { timestamp: -1 }, projection: { _id: 1, authors: 1, body: 1, title: 1 }, limit: LIMIT_CONST
+                            })];
+                    case 2:
+                        lastPostsQuery = _a.sent();
+                        lastPostsQuery.forEach(function (post) {
+                            console.log(post);
+                        });
+                        return [4 /*yield*/, schemaUser_1.User.updateOne({ _id: thisAuthorId }, {
+                                lastPosts: lastPosts
+                            })];
+                    case 3:
+                        updatedUser = _a.sent();
+                        return [2 /*return*/, res.status(200).json({ text: "Status 200: Success", updatedUser: updatedUser })];
+                    case 4:
+                        error_1 = _a.sent();
+                        return [2 /*return*/, res.status(404).json({ error: "Error 404: Unable to update the last posts of this user" })];
+                    case 5: return [2 /*return*/];
+                }
+            });
+        });
+    };
     Wall.add = function (req, res) {
         return __awaiter(this, void 0, void 0, function () {
-            var thisAuthorId, _a, title, body, authors, visible, validators, post, postData, error_1;
+            var thisAuthorId, _a, title, body, authors, visible, validators, post, postData, error_2;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
@@ -54,7 +91,7 @@ var Wall = /** @class */ (function () {
                         if (!title || !body || !authors || !(authors.includes(thisAuthorId))) {
                             //No title / body / Authors / publisher is not an author
                             return [2 /*return*/, res.status(400).json({
-                                    text: "Invalid format"
+                                    text: "Error 400: Invalid format"
                                 })];
                         }
                         validators = new Array();
@@ -82,8 +119,8 @@ var Wall = /** @class */ (function () {
                                 text: "Success", title: postData.title, message: postData.body, authors: authors, visible: visible, validators: validators
                             })];
                     case 3:
-                        error_1 = _b.sent();
-                        return [2 /*return*/, res.status(500).json({ error: error_1 })];
+                        error_2 = _b.sent();
+                        return [2 /*return*/, res.status(500).json({ error: error_2 })];
                     case 4: return [2 /*return*/];
                 }
             });
@@ -91,7 +128,7 @@ var Wall = /** @class */ (function () {
     };
     Wall.validate = function (req, res) {
         return __awaiter(this, void 0, void 0, function () {
-            var postId, thisAuthorId, valAuth, postData, updatedValidators_1, finalPostData, fullyValidated_1, visible, updatedVisible, error_2, error_3;
+            var postId, thisAuthorId, valAuth, postData, updatedValidators_1, finalPostData, fullyValidated_1, visible, updatedVisible, error_3, error_4;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -130,12 +167,12 @@ var Wall = /** @class */ (function () {
                         _a.label = 6;
                     case 6: return [2 /*return*/, res.status(200).json({ text: "Status 200: Success", validators: finalPostData.validators, visible: visible })];
                     case 7:
-                        error_2 = _a.sent();
-                        return [2 /*return*/, res.status(410).json({ text: "Error 410: the ressource you are trying to access is not available anymore", error: error_2 })];
+                        error_3 = _a.sent();
+                        return [2 /*return*/, res.status(410).json({ text: "Error 410: the ressource you are trying to access is not available anymore", error: error_3 })];
                     case 8: return [3 /*break*/, 10];
                     case 9:
-                        error_3 = _a.sent();
-                        return [2 /*return*/, res.status(404).json({ text: "Error 404: not found", error: error_3 })];
+                        error_4 = _a.sent();
+                        return [2 /*return*/, res.status(404).json({ text: "Error 404: not found", error: error_4 })];
                     case 10: return [2 /*return*/];
                 }
             });
@@ -143,7 +180,7 @@ var Wall = /** @class */ (function () {
     };
     Wall.put = function (req, res) {
         return __awaiter(this, void 0, void 0, function () {
-            var thisAuthorId, postId, updatedValues, wallPost, error_4;
+            var thisAuthorId, postId, updatedValues, wallPost, error_5;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -164,7 +201,7 @@ var Wall = /** @class */ (function () {
                         wallPost = _a.sent();
                         return [2 /*return*/, res.status(200).json({ text: "Status 200: Success", data: wallPost })];
                     case 3:
-                        error_4 = _a.sent();
+                        error_5 = _a.sent();
                         return [2 /*return*/, res.status(404).json({ text: "Error 404: Ressource not found, unable to modify" })];
                     case 4: return [2 /*return*/];
                 }
@@ -173,7 +210,7 @@ var Wall = /** @class */ (function () {
     };
     Wall.get = function (req, res) {
         return __awaiter(this, void 0, void 0, function () {
-            var reqParams, wallPosts, error_5;
+            var reqParams, wallPosts, error_6;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -184,10 +221,10 @@ var Wall = /** @class */ (function () {
                         wallPosts = _a.sent();
                         return [2 /*return*/, res.status(200).json({ text: "Status 200: Success", data: wallPosts })];
                     case 2:
-                        error_5 = _a.sent();
+                        error_6 = _a.sent();
                         return [2 /*return*/, res.status(400).json({
                                 text: "Error 400: bad request",
-                                error: error_5
+                                error: error_6
                             })];
                     case 3: return [2 /*return*/];
                 }
@@ -197,7 +234,7 @@ var Wall = /** @class */ (function () {
     /* For testing purposes only */
     Wall.delAll = function (req, res) {
         return __awaiter(this, void 0, void 0, function () {
-            var error_6;
+            var error_7;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -207,8 +244,8 @@ var Wall = /** @class */ (function () {
                         _a.sent();
                         return [2 /*return*/, res.status(200).json({ text: "Status 200: Success" })];
                     case 2:
-                        error_6 = _a.sent();
-                        res.status(400).json({ err: error_6 });
+                        error_7 = _a.sent();
+                        res.status(400).json({ err: error_7 });
                         return [3 /*break*/, 3];
                     case 3: return [2 /*return*/];
                 }
@@ -217,7 +254,7 @@ var Wall = /** @class */ (function () {
     };
     Wall.del = function (req, res) {
         return __awaiter(this, void 0, void 0, function () {
-            var id, error_7;
+            var id, error_8;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -228,8 +265,8 @@ var Wall = /** @class */ (function () {
                         _a.sent();
                         return [2 /*return*/, res.status(200).json({ text: "Status 200: Success" })];
                     case 2:
-                        error_7 = _a.sent();
-                        res.status(400).json({ err: error_7 });
+                        error_8 = _a.sent();
+                        res.status(400).json({ err: error_8 });
                         return [3 /*break*/, 3];
                     case 3: return [2 /*return*/];
                 }

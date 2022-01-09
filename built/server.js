@@ -7,19 +7,24 @@ Object.defineProperty(exports, "__esModule", { value: true });
 //
 var cors = require("cors");
 var express_1 = __importDefault(require("express"));
-var mongoose = require("mongoose");
 var userController_1 = require("./controllers/userController");
 var userAuthentification_1 = require("./controllers/userAuthentification");
 var wallController_1 = require("./controllers/wallController");
 // Database connection
-mongoose
-    .connect("mongodb://localhost/ArteFact")
-    .then(function () {
-    console.log("Connected");
-})
-    .catch(function (e) {
-    console.log("Error during the connection");
-    console.log(e);
+var MongoClient = require('mongodb').MongoClient;
+var assert = require('assert');
+// Connection URL
+var url = "mongodb://localhost/ArteFact";
+// Database Name
+var dbName = 'ArteFact';
+// Create a new MongoClient
+var client = new MongoClient(url);
+// Use connect method to connect to the Server
+client.connect(function (err) {
+    assert.equal(null, err);
+    console.log("Connected successfully to server");
+    var db = client.db(dbName);
+    client.close();
 });
 // Create an express app
 var app = (0, express_1.default)();

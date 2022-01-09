@@ -1,14 +1,52 @@
 import { Wall as WallSchema } from "../../schema/schemaWall.js";
-import { User } from "../../schema/schemaUser";
+import { User as UserSchema } from "../../schema/schemaUser";
 
 import { ObjectId } from 'mongodb';
+
+var LIMIT_CONST = 15;
 
 interface validator {
 	author: string,
 	validate: boolean
 };
 
+interface postInt {
+	id: string,
+	authors: string[],
+	body: string,
+	title: string
+}
+
 export class Wall {
+
+	static async updatePosts(req, res) {
+		const thisAuthorId = req.authData.id;
+		try {
+
+			const lastPosts: postInt[] = new Array();
+
+			const lastPostsQuery = await WallSchema.find(
+				{
+					$and: [{ "authors": thisAuthorId }, { "visible": true }]
+				},
+
+				{
+					sort: { timestamp: -1 }, projection: { _id: 1, authors: 1, body: 1, title: 1 }, limit: LIMIT_CONST
+				}
+			);
+
+			lastPostsQuery.forEach(post => {
+				console.log(post);
+			});
+
+			const updatedUser = await UserSchema.updateOne({ _id: thisAuthorId }, {
+				lastPosts: lastPosts
+			});
+			return res.status(200).json({ text: "Status 200: Success", updatedUser })
+		} catch (error) {
+			return res.status(404).json({ error: "Error 404: Unable to update the last posts of this user" });
+		}
+	}
 
 	static async add(req, res) {
 
@@ -18,7 +56,7 @@ export class Wall {
 		if (!title || !body || !authors || !(authors.includes(thisAuthorId))) {
 			//No title / body / Authors / publisher is not an author
 			return res.status(400).json({
-				text: "Invalid format"
+				text: "Error 400: Invalid format"
 			});
 		}
 
@@ -39,7 +77,6 @@ export class Wall {
 		else {
 			visible = false;
 		}
-
 
 		// Create the post.
 		const post = { title, body, authors, visible, validators };

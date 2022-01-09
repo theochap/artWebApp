@@ -9,5 +9,6 @@ export function PrivateWallMiddleware(app) {
 	app.post("/", Wall.add);
 	app.unlock("/", Wall.validate);
 	app.delete("/", Wall.del);
-	app.put("/", Wall.put)
+	app.put("/", Wall.put);
+	app.patch("/", Wall.updatePosts);
 }

@@ -2,65 +2,53 @@
 //
 import cors = require('cors');
 import express from "express";
-import mongoose = require("mongoose");
 import { PublicUserMiddleware, PrivateUserMiddleware } from "./controllers/userController"
 import { Authentificate } from './controllers/userAuthentification';
 import { PublicWallMiddleware, PrivateWallMiddleware } from './controllers/wallController';
-
-// Database connection
-
-mongoose
-	.connect("mongodb://localhost/ArteFact")
-	.then(() => {
-		console.log("Connected");
-	})
-	.catch(e => {
-		console.log("Error during the connection");
-		console.log(e);
-	});
-
-
+import { ConnectToDatabase } from './services/database.service';
 
 // Create an express app
-
 const app = express();
 
 // Body Parser
-//
-
 const urlencodedParser = express.urlencoded({
 	extended: true
 
 });
 
-// CORS definition
-app.use(cors());
+// DataBase connection
 
-app.use(urlencodedParser);
-app.use(express.json());
+ConnectToDatabase().then(() => {
+	// CORS definition
+	app.use(cors());
 
-// Router definition
+	app.use(urlencodedParser);
+	app.use(express.json());
 
-const privateUserRouter = express.Router();
-PrivateUserMiddleware(privateUserRouter);
-app.use("/users/private", Authentificate.parseToken, Authentificate.authMiddleware, privateUserRouter);
+	// Router definition
+	const privateUserRouter = express.Router();
+	PrivateUserMiddleware(privateUserRouter);
+	app.use("/users/private", Authentificate.parseToken, Authentificate.authMiddleware, privateUserRouter);
 
-const publicUserRouter = express.Router();
-PublicUserMiddleware(publicUserRouter);
-app.use("/users", publicUserRouter);
+	const publicUserRouter = express.Router();
+	PublicUserMiddleware(publicUserRouter);
+	app.use("/users", publicUserRouter);
 
-const privateWallRouter = express.Router();
-PrivateWallMiddleware(privateWallRouter);
-app.use("/wall/private", Authentificate.parseToken, Authentificate.authMiddleware, privateWallRouter);
+	const privateWallRouter = express.Router();
+	PrivateWallMiddleware(privateWallRouter);
+	app.use("/wall/private", Authentificate.parseToken, Authentificate.authMiddleware, privateWallRouter);
 
-const publicWallRouter = express.Router();
-PublicWallMiddleware(publicWallRouter);
-app.use("/wall", publicWallRouter);
+	const publicWallRouter = express.Router();
+	PublicWallMiddleware(publicWallRouter);
+	app.use("/wall", publicWallRouter);
 
-app.get("/", (req, res) => { res.status(200).json({ text: "Status 200: Success" }) });
+	app.get("/", (req, res) => { res.status(200).json({ text: "Status 200: Success" }) });
 
-// Listen on port 8080
-//
+	// Listen on port 8080
+	const port = 8080;
+	app.listen(port, () => console.log(`Listening on port ${port}`));
 
-const port = 8080;
-app.listen(port, () => console.log(`Listening on port ${port}`));
+}).catch(err => {
+	console.log(err);
+	process.exit();
+});

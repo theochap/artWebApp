@@ -1,8 +1,25 @@
-import { User } from "../../schema/schemaUser";
-import { Wall } from "../../schema/schemaWall";
+import { runDBCommand } from "../../dbConnect";
 import passwordHash = require("password-hash");
 const jwt = require("jsonwebtoken");
 const burl = "localhost:8080";
+
+type userSchema {
+	pseudo: string
+	email: string,
+	password: string,
+
+	lastPosts: [{
+		id: string,
+		authors: string[],
+		title: string
+		body: string,
+		timestamp: Date,
+	}],
+
+	createdAt: {
+		type: Date
+	}
+}
 
 export class Account {
 	static async authTest(req, res) {
@@ -40,14 +57,19 @@ export class Account {
 
 		// verify that a user already exists
 		try {
-			const findUser = await User.findOne({
-				email,
-			});
-			if (findUser) {
-				return res.status(400).json({
-					text: "The user already exists",
+			runDBCommand(() => {
+
+				const findUser = await db.collection("User").findOne<userSchema>({
+					email: email,
 				});
-			}
+
+				if (findUser) {
+					return res.status(400).json({
+						text: "The user already exists",
+					});
+				}
+			})
+
 		} catch (error) {
 			return res.status(500).json({ error });
 		}
@@ -145,7 +167,7 @@ export class Account {
 		const reqParams = req.query;
 		try {
 
-			const userData = await (User.find(reqParams, { _id: 1, pseudo: 1, email: 1 }));
+			const userData = await (User.find(reqParams, { _id: 1, pseudo: 1, email: 1, lastPosts: 1 }));
 
 			return res.status(200)
 				.json({
