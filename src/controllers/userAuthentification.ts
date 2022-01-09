@@ -1,15 +1,16 @@
-import { Config } from "../config/config";
+import * as dotenv from "dotenv";
 const jwt = require("jsonwebtoken");
 
 export class Authentificate {
 
     static async authMiddleware(req, res, next) {
         const token: string = req.token;
+        dotenv.config();
         console.log(token);
 
         if (token) {
             try {
-                const decode = await jwt.verify(token, Config.secret);
+                const decode = await jwt.verify(token, process.env.JWT_PASS);
                 req.authData = decode;
                 next();
             }

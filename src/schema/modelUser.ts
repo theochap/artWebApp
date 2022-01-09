@@ -8,7 +8,7 @@ export class User {
         public _id: ObjectId,
         public pseudo?: string,
         public email?: string,
-        public password?: string,
+        private password?: string,
         public lastPosts?: [{
             id: string,
             authors: string[],
@@ -20,12 +20,13 @@ export class User {
 
     }
 
-    getToken(): string {
+    public getToken(): string {
         const data = { _id: this._id };
         dotenv.config();
         return jwt.encode(data, process.env.JWT_PASS);
     }
-    authenticate(password) {
+
+    public authenticate(password) {
         return passwordHash.verify(password, this.password);
     }
 }

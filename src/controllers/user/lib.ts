@@ -1,12 +1,14 @@
 import { Collections } from "../../services/database.service";
 import { Request, Response } from "express";
 import { User as UserSchema } from "../../schema/modelUser";
+import { ObjectId } from "mongodb";
 import passwordHash = require("password-hash");
 const jwt = require("jsonwebtoken");
 const burl = "localhost:8080";
 
 export class User {
 	static async authTest(req: Request, res: Response) {
+		console.log(req.authData);
 		if (req.authData) {
 			return res.status(203).json({ text: "Status 200: Access Authorized", data: req.authData });
 		}
@@ -75,13 +77,14 @@ export class User {
 		const { password, email }: { password: string, email: string } = req.body;
 		if (!email || !password) {
 			return res.status(400).json({
-				text: "Invalid request",
+				text: "Error 400 : Invalid request",
 			});
 		}
 		try {
 			// Verify that the user exists
 
-			const findUser = await Collections.users.findOne({ email }) as UserSchema;
+			const findUserDoc = await Collections.users.findOne({ email: email });
+			const findUser = new UserSchema(findUserDoc._id, findUserDoc.pseudo, findUserDoc.email, findUserDoc.password);
 			if (!findUser)
 				return res.status(401).json({
 					text: "This user does not exist",
@@ -98,6 +101,7 @@ export class User {
 			});
 		} catch (error) {
 			return res.status(500).json({
+				text: "Error 500: internal server error",
 				error,
 			});
 		}
@@ -143,15 +147,19 @@ export class User {
 
 	static async get(req: Request, res: Response) {
 
-		const reqParams: UserSchema = req.query;
+		const reqParams = req.query;
+
+		if (reqParams._id) {
+			reqParams._id = new ObjectId(reqParams._id);
+		}
+
 		try {
-
-			const userData = await (Collections.users.findOne(reqParams, { projection: { _id: 1, pseudo: 1, email: 1, lastPosts: 1, }, }));
-
+			const userData = (Collections.users.find(reqParams, { projection: { _id: 1, pseudo: 1, email: 1, lastPosts: 1, }, }));
+			const returnedData = await userData.toArray();
 			return res.status(200)
 				.json({
 					status: "200 : Request completed",
-					userData,
+					returnedData,
 				});
 
 		} catch (err) {
@@ -164,63 +172,58 @@ export class User {
 	}
 
 	static async updateUserById(req: Request, res: Response) {
-		try {
-			const id = req.authData.id;
-			const updatedValues = {};
-			Object.keys(req.body).forEach((field) => {
-				if (field == "password") {
-					updatedValues["password"] =
-						passwordHash.generate(
-							req.body.password
-						);
-				} else if (field == "_id") {
-					return res
-						.status(401)
-						.json({
-							status: "401 : You're not authorized to change a user ID",
-						});
-				} else {
-					updatedValues[field] = req.body[field];
-				}
-			});
 
-			if (updatedValues) {
-				return Collections.users.updateOne(
-					{ _id: id },
-					updatedValues
-				)
-					.then((result) => {
-						let userData =
-							"http://" +
-							burl +
-							"/users/" +
-							id;
-						result["links"] = {
-							href: userData,
-							method: "GET",
-							rel: "data",
-						};
-						res.status(201).json({
-							status: "201 : Ressource successfully created",
-							result,
-						});
-					})
-					.catch((err) =>
-						res
-							.status(400)
-							.json({
-								status: "400 : Bad Request",
-								error: err,
-							})
+		const idStr: string = req.authData._id;
+		const id = new ObjectId(idStr);
+		let updatedValues = {};
+		Object.keys(req.body).forEach((field) => {
+			if (field == "password") {
+				updatedValues["password"] =
+					passwordHash.generate(
+						req.body.password
 					);
+			} else if (field == "_id") {
+				return res
+					.status(401)
+					.json({
+						status: "401 : You're not authorized to change a user ID",
+					});
+			} else {
+				updatedValues[field] = req.body[field];
 			}
-		} catch (error) {
-			return res
-				.status(500)
-				.json({
-					status: "Error 500 : Internal server error",
-					error,
-				});
+		});
+
+		if (updatedValues) {
+			console.log(updatedValues);
+			console.log(id);
+			return Collections.users.updateOne(
+				{ _id: id },
+				{ $set: updatedValues }
+			)
+				.then((result) => {
+					let userData =
+						"http://" +
+						burl +
+						"/users/" +
+						id;
+					result["links"] = {
+						href: userData,
+						method: "GET",
+						rel: "data",
+					};
+					res.status(201).json({
+						status: "201 : Ressource successfully created",
+						result,
+					});
+				})
+				.catch((err) =>
+					res
+						.status(400)
+						.json({
+							status: "400 : Bad Request",
+							error: err,
+						})
+				);
 		}
 	}
 }
