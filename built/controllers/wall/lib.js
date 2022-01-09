@@ -36,16 +36,14 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Wall = void 0;
-var schemaWall_js_1 = require("../../schema/schemaWall.js");
-var schemaUser_1 = require("../../schema/schemaUser");
+exports.Posts = void 0;
+var database_service_js_1 = require("../../services/database.service.js");
 var mongodb_1 = require("mongodb");
 var LIMIT_CONST = 15;
-;
-var Wall = /** @class */ (function () {
-    function Wall() {
+var Posts = /** @class */ (function () {
+    function Posts() {
     }
-    Wall.updatePosts = function (req, res) {
+    Posts.updatePosts = function (req, res) {
         return __awaiter(this, void 0, void 0, function () {
             var thisAuthorId, lastPosts, lastPostsQuery, updatedUser, error_1;
             return __generator(this, function (_a) {
@@ -56,7 +54,7 @@ var Wall = /** @class */ (function () {
                     case 1:
                         _a.trys.push([1, 4, , 5]);
                         lastPosts = new Array();
-                        return [4 /*yield*/, schemaWall_js_1.Wall.find({
+                        return [4 /*yield*/, database_service_js_1.Collections.posts.find({
                                 $and: [{ "authors": thisAuthorId }, { "visible": true }]
                             }, {
                                 sort: { timestamp: -1 }, projection: { _id: 1, authors: 1, body: 1, title: 1 }, limit: LIMIT_CONST
@@ -66,7 +64,7 @@ var Wall = /** @class */ (function () {
                         lastPostsQuery.forEach(function (post) {
                             console.log(post);
                         });
-                        return [4 /*yield*/, schemaUser_1.User.updateOne({ _id: thisAuthorId }, {
+                        return [4 /*yield*/, database_service_js_1.Collections.posts.updateOne({ _id: thisAuthorId }, {
                                 lastPosts: lastPosts
                             })];
                     case 3:
@@ -80,9 +78,9 @@ var Wall = /** @class */ (function () {
             });
         });
     };
-    Wall.add = function (req, res) {
+    Posts.add = function (req, res) {
         return __awaiter(this, void 0, void 0, function () {
-            var thisAuthorId, _a, title, body, authors, visible, validators, post, postData, error_2;
+            var thisAuthorId, _a, title, body, authors, visible, validators, post, error_2;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
@@ -111,12 +109,11 @@ var Wall = /** @class */ (function () {
                         _b.label = 1;
                     case 1:
                         _b.trys.push([1, 3, , 4]);
-                        postData = new schemaWall_js_1.Wall(post);
-                        return [4 /*yield*/, postData.save()];
+                        return [4 /*yield*/, database_service_js_1.Collections.posts.insertOne(post)];
                     case 2:
                         _b.sent();
                         return [2 /*return*/, res.status(200).json({
-                                text: "Success", title: postData.title, message: postData.body, authors: authors, visible: visible, validators: validators
+                                text: "Success", title: post.title, message: post.body, authors: authors, visible: visible, validators: validators
                             })];
                     case 3:
                         error_2 = _b.sent();
@@ -126,9 +123,9 @@ var Wall = /** @class */ (function () {
             });
         });
     };
-    Wall.validate = function (req, res) {
+    Posts.validate = function (req, res) {
         return __awaiter(this, void 0, void 0, function () {
-            var postId, thisAuthorId, valAuth, postData, updatedValidators_1, finalPostData, fullyValidated_1, visible, updatedVisible, error_3, error_4;
+            var postId, thisAuthorId, valAuth, postData, updatedValidators_1, finalPostDataCursor, finalPostData, fullyValidated_1, visible, updatedVisible, error_3, error_4;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -138,7 +135,7 @@ var Wall = /** @class */ (function () {
                     case 1:
                         _a.trys.push([1, 9, , 10]);
                         valAuth = { author: thisAuthorId, validate: true };
-                        return [4 /*yield*/, schemaWall_js_1.Wall.findOne({ $and: [{ _id: postId }, { "validators.author": thisAuthorId }] })];
+                        return [4 /*yield*/, database_service_js_1.Collections.posts.findOne({ $and: [{ _id: postId }, { "validators.author": thisAuthorId }] })];
                     case 2:
                         postData = _a.sent();
                         updatedValidators_1 = new Array();
@@ -153,14 +150,15 @@ var Wall = /** @class */ (function () {
                         _a.label = 3;
                     case 3:
                         _a.trys.push([3, 7, , 8]);
-                        return [4 /*yield*/, schemaWall_js_1.Wall.findOneAndUpdate({ $and: [{ _id: postId }, { validators: postData.validators }] }, { validators: updatedValidators_1 }, { returnDocument: "after" })];
+                        return [4 /*yield*/, database_service_js_1.Collections.posts.findOneAndUpdate({ $and: [{ _id: postId }, { validators: postData.validators }] }, { validators: updatedValidators_1 }, { returnDocument: "after" })];
                     case 4:
-                        finalPostData = _a.sent();
+                        finalPostDataCursor = _a.sent();
+                        finalPostData = finalPostDataCursor.value;
                         fullyValidated_1 = true;
-                        finalPostData.validators.forEach(function (validator) { return fullyValidated_1 = (validator.validate == false) ? false : fullyValidated_1; });
+                        finalPostData.validators.forEach(function (Validator) { return fullyValidated_1 = (Validator.validate == false) ? false : fullyValidated_1; });
                         visible = false;
                         if (!fullyValidated_1) return [3 /*break*/, 6];
-                        return [4 /*yield*/, schemaWall_js_1.Wall.updateOne({ _id: postId }, { visible: true })];
+                        return [4 /*yield*/, database_service_js_1.Collections.posts.updateOne({ _id: postId }, { visible: true })];
                     case 5:
                         updatedVisible = _a.sent();
                         visible = true;
@@ -178,7 +176,7 @@ var Wall = /** @class */ (function () {
             });
         });
     };
-    Wall.put = function (req, res) {
+    Posts.put = function (req, res) {
         return __awaiter(this, void 0, void 0, function () {
             var thisAuthorId, postId, updatedValues, wallPost, error_5;
             return __generator(this, function (_a) {
@@ -196,7 +194,7 @@ var Wall = /** @class */ (function () {
                         _a.label = 1;
                     case 1:
                         _a.trys.push([1, 3, , 4]);
-                        return [4 /*yield*/, schemaWall_js_1.Wall.findOneAndUpdate({ $and: [{ _id: postId }, { "authors": thisAuthorId }] }, updatedValues)];
+                        return [4 /*yield*/, database_service_js_1.Collections.posts.findOneAndUpdate({ $and: [{ _id: postId }, { "authors": thisAuthorId }] }, updatedValues)];
                     case 2:
                         wallPost = _a.sent();
                         return [2 /*return*/, res.status(200).json({ text: "Status 200: Success", data: wallPost })];
@@ -208,7 +206,7 @@ var Wall = /** @class */ (function () {
             });
         });
     };
-    Wall.get = function (req, res) {
+    Posts.get = function (req, res) {
         return __awaiter(this, void 0, void 0, function () {
             var reqParams, wallPosts, error_6;
             return __generator(this, function (_a) {
@@ -216,7 +214,7 @@ var Wall = /** @class */ (function () {
                     case 0:
                         _a.trys.push([0, 2, , 3]);
                         reqParams = req.query;
-                        return [4 /*yield*/, (schemaWall_js_1.Wall.find(reqParams))];
+                        return [4 /*yield*/, (database_service_js_1.Collections.posts.find(reqParams))];
                     case 1:
                         wallPosts = _a.sent();
                         return [2 /*return*/, res.status(200).json({ text: "Status 200: Success", data: wallPosts })];
@@ -232,14 +230,14 @@ var Wall = /** @class */ (function () {
         });
     };
     /* For testing purposes only */
-    Wall.delAll = function (req, res) {
+    Posts.delAll = function (req, res) {
         return __awaiter(this, void 0, void 0, function () {
             var error_7;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
                         _a.trys.push([0, 2, , 3]);
-                        return [4 /*yield*/, schemaWall_js_1.Wall.deleteMany()];
+                        return [4 /*yield*/, database_service_js_1.Collections.posts.deleteMany({})];
                     case 1:
                         _a.sent();
                         return [2 /*return*/, res.status(200).json({ text: "Status 200: Success" })];
@@ -252,7 +250,7 @@ var Wall = /** @class */ (function () {
             });
         });
     };
-    Wall.del = function (req, res) {
+    Posts.del = function (req, res) {
         return __awaiter(this, void 0, void 0, function () {
             var id, error_8;
             return __generator(this, function (_a) {
@@ -260,7 +258,7 @@ var Wall = /** @class */ (function () {
                     case 0:
                         _a.trys.push([0, 2, , 3]);
                         id = (req.body.id);
-                        return [4 /*yield*/, schemaWall_js_1.Wall.deleteOne({ "_id": new mongodb_1.ObjectId(id) })];
+                        return [4 /*yield*/, database_service_js_1.Collections.posts.deleteOne({ "_id": new mongodb_1.ObjectId(id) })];
                     case 1:
                         _a.sent();
                         return [2 /*return*/, res.status(200).json({ text: "Status 200: Success" })];
@@ -273,6 +271,6 @@ var Wall = /** @class */ (function () {
             });
         });
     };
-    return Wall;
+    return Posts;
 }());
-exports.Wall = Wall;
+exports.Posts = Posts;

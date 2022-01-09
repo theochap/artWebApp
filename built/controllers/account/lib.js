@@ -37,8 +37,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Account = void 0;
-var schemaUser_1 = require("../../schema/schemaUser");
-var schemaWall_1 = require("../../schema/schemaWall");
+var database_service_1 = require("../../services/database.service");
 var passwordHash = require("password-hash");
 var jwt = require("jsonwebtoken");
 var burl = "localhost:8080";
@@ -63,7 +62,7 @@ var Account = /** @class */ (function () {
     };
     Account.signup = function (req, res) {
         return __awaiter(this, void 0, void 0, function () {
-            var _a, password, pseudo, email, user, findUser, error_1, userData, userObject, error_2;
+            var _a, password, pseudo, email, user, findUser, error_1, userObject, error_2;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
@@ -83,7 +82,7 @@ var Account = /** @class */ (function () {
                         _b.label = 1;
                     case 1:
                         _b.trys.push([1, 3, , 4]);
-                        return [4 /*yield*/, schemaUser_1.User.findOne({
+                        return [4 /*yield*/, database_service_1.Collections.users.findOne({
                                 email: email,
                             })];
                     case 2:
@@ -99,15 +98,13 @@ var Account = /** @class */ (function () {
                         return [2 /*return*/, res.status(500).json({ error: error_1 })];
                     case 4:
                         _b.trys.push([4, 6, , 7]);
-                        userData = new schemaUser_1.User(user);
-                        return [4 /*yield*/, userData.save()];
+                        return [4 /*yield*/, database_service_1.Collections.users.insertOne(user)];
                     case 5:
                         userObject = _b.sent();
-                        res.location("http://" + burl + "/users/" + userObject._id);
+                        res.location("http://" + burl + "/users/" + userObject.insertedId);
                         return [2 /*return*/, res.status(201).json({
                                 text: "201 Success : User created",
-                                token: userObject.getToken(),
-                                id: userObject._id,
+                                id: userObject.insertedId,
                             })];
                     case 6:
                         error_2 = _b.sent();
@@ -132,7 +129,7 @@ var Account = /** @class */ (function () {
                         _b.label = 1;
                     case 1:
                         _b.trys.push([1, 3, , 4]);
-                        return [4 /*yield*/, schemaUser_1.User.findOne({ email: email })];
+                        return [4 /*yield*/, database_service_1.Collections.users.findOne({ email: email })];
                     case 2:
                         findUser = _b.sent();
                         if (!findUser)
@@ -166,7 +163,7 @@ var Account = /** @class */ (function () {
                 switch (_a.label) {
                     case 0:
                         _a.trys.push([0, 2, , 3]);
-                        return [4 /*yield*/, schemaUser_1.User.deleteMany()];
+                        return [4 /*yield*/, database_service_1.Collections.users.deleteMany({})];
                     case 1:
                         _a.sent();
                         return [2 /*return*/, res.status(200).json({ text: "Success" })];
@@ -187,10 +184,10 @@ var Account = /** @class */ (function () {
                     case 0:
                         _a.trys.push([0, 3, , 4]);
                         id = req.authData.id;
-                        return [4 /*yield*/, schemaWall_1.Wall.remove({ authors: { $in: [id] } })];
+                        return [4 /*yield*/, database_service_1.Collections.posts.deleteMany({ authors: { $in: [id] } })];
                     case 1:
                         delWall = _a.sent();
-                        return [4 /*yield*/, schemaUser_1.User.remove({ _id: id })];
+                        return [4 /*yield*/, database_service_1.Collections.users.deleteOne({ _id: id })];
                     case 2:
                         delUser = _a.sent();
                         return [2 /*return*/, res
@@ -224,7 +221,7 @@ var Account = /** @class */ (function () {
                         _a.label = 1;
                     case 1:
                         _a.trys.push([1, 3, , 4]);
-                        return [4 /*yield*/, (schemaUser_1.User.find(reqParams, { _id: 1, pseudo: 1, email: 1, lastPosts: 1 }))];
+                        return [4 /*yield*/, (database_service_1.Collections.users.findOne(reqParams, { projection: { _id: 1, pseudo: 1, email: 1, lastPosts: 1, }, }))];
                     case 2:
                         userData = _a.sent();
                         return [2 /*return*/, res.status(200)
@@ -268,7 +265,7 @@ var Account = /** @class */ (function () {
                         }
                     });
                     if (updatedValues_1) {
-                        return [2 /*return*/, schemaUser_1.User.updateOne({ _id: id_1 }, updatedValues_1)
+                        return [2 /*return*/, database_service_1.Collections.users.updateOne({ _id: id_1 }, updatedValues_1)
                                 .then(function (result) {
                                 var userData = "http://" +
                                     burl +

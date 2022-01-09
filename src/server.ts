@@ -4,7 +4,7 @@ import cors = require('cors');
 import express from "express";
 import { PublicUserMiddleware, PrivateUserMiddleware } from "./controllers/userController"
 import { Authentificate } from './controllers/userAuthentification';
-import { PublicWallMiddleware, PrivateWallMiddleware } from './controllers/wallController';
+import { PublicWallMiddleware, PrivateWallMiddleware } from './controllers/postController';
 import { ConnectToDatabase } from './services/database.service';
 
 // Create an express app
