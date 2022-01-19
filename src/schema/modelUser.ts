@@ -6,8 +6,8 @@ import passwordHash = require("password-hash");
 export class User {
     constructor(
         public _id: ObjectId,
-        public pseudo?: string,
-        public email?: string,
+        public pseudo: string,
+        public email: string,
         private password?: string,
         public lastPosts?: [{
             id: string,

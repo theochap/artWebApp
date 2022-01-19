@@ -12,6 +12,7 @@ export class Authentificate {
             try {
                 const decode = await jwt.verify(token, process.env.JWT_PASS);
                 req.authData = decode;
+                console.log(req.authData)
                 next();
             }
             catch (error) {

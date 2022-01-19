@@ -1,4 +1,4 @@
-import { Collections } from "../../services/database.service";
+import { DBVars } from "../../services/database.service";
 import { Request, Response } from "express";
 import { User as UserSchema } from "../../schema/modelUser";
 import { ObjectId } from "mongodb";
@@ -28,7 +28,7 @@ export class User {
 		if (!email || !password || !pseudo) {
 			// email, password or pseudo empty
 			return res.status(400).json({
-				text: "Invalid request",
+				text: "Error 400: Bad request",
 			});
 		}
 
@@ -43,23 +43,9 @@ export class User {
 
 		// verify that a user already exists
 		try {
-			const findUser = await Collections.users.findOne<UserSchema>({
-				email: email,
-			});
 
-			if (findUser) {
-				return res.status(400).json({
-					text: "The user already exists",
-				});
-			}
-		}
-		catch (error) {
-			return res.status(500).json({ error });
-		}
-
-		try {
 			// Save if the user does not exist
-			const userObject = await Collections.users.insertOne(user);
+			const userObject = await DBVars.users.insertOne(user);
 			res.location(
 				"http://" + burl + "/users/" + userObject.insertedId
 			);
@@ -68,9 +54,12 @@ export class User {
 				text: "201 Success : User created",
 				id: userObject.insertedId,
 			});
-		} catch (error) {
-			return res.status(500).json({ error });
+
 		}
+		catch (error) {
+			return res.status(400).json({ text: "Error 400: Impossible to create a new user", error });
+		}
+
 	}
 
 	static async login(req: Request, res: Response) {
@@ -83,21 +72,21 @@ export class User {
 		try {
 			// Verify that the user exists
 
-			const findUserDoc = await Collections.users.findOne({ email: email });
+			const findUserDoc = await DBVars.users.findOne({ email: email });
 			const findUser = new UserSchema(findUserDoc._id, findUserDoc.pseudo, findUserDoc.email, findUserDoc.password);
 			if (!findUser)
-				return res.status(401).json({
-					text: "This user does not exist",
+				return res.status(404).json({
+					text: "Error 404: This user does not exist",
 				});
 			if (!findUser.authenticate(password))
 				return res.status(401).json({
-					text: "Invalid password",
+					text: "Error 401: Invalid password",
 				});
 
 			return res.status(200).json({
 				token: findUser.getToken(),
 				id: findUser._id,
-				text: "Successful authentification",
+				text: "Status 200: Successful authentification",
 			});
 		} catch (error) {
 			return res.status(500).json({
@@ -110,8 +99,8 @@ export class User {
 	/* For testing purposes only */
 	static async delAll(req: Request, res: Response) {
 		try {
-			await Collections.users.deleteMany({});
-			return res.status(200).json({ text: "Success" });
+			await DBVars.users.deleteMany({});
+			return res.status(200).json({ text: "Status 200: Success" });
 
 		}
 		catch (error) {
@@ -120,29 +109,43 @@ export class User {
 	}
 
 	static async delUser(req: Request, res: Response) {
-		try {
-			const id = req.authData.id;
-			const delWall = await Collections.posts.deleteMany({ authors: { $in: [id] } });
-			const delUser = await Collections.users.deleteOne({ _id: id });
+		const idStr: string = req.authData._id;
+		const id = new ObjectId(idStr);
 
-			return res
-				.status(200)
-				.json({
-					text: "User deleted successfully",
-					delUser: delUser,
-					delWall: delWall
-				})
+		try {
+			const delUser = await DBVars.users.deleteOne({ _id: id });
+			const delPosts = await DBVars.posts.deleteMany({ authors: { $in: [id] } }, { retryWrites: true });
+
+			if (delUser.deletedCount == 0) {
+				return res.status(404).json({
+					error: "Error 404: the user to delete has not been found"
+				});
+
+			} else {
+
+				return res
+					.status(200)
+					.json({
+						text: "Status 200: User deleted successfully",
+						delUser,
+						delPosts
+					});
+
+			}
+
 
 		} catch (err) {
-			res
+
+			return res
 				.status(400)
 				.json({
-					status: "400",
+					status: "Error 500: internal server error",
 					err: err,
 				})
 		}
-
 	}
+
+
 
 
 	static async get(req: Request, res: Response) {
@@ -154,7 +157,7 @@ export class User {
 		}
 
 		try {
-			const userData = (Collections.users.find(reqParams, { projection: { _id: 1, pseudo: 1, email: 1, lastPosts: 1, }, }));
+			const userData = (DBVars.users.find(reqParams, { projection: { _id: 1, pseudo: 1, email: 1, lastPosts: 1, }, }));
 			const returnedData = await userData.toArray();
 			return res.status(200)
 				.json({
@@ -186,7 +189,7 @@ export class User {
 				return res
 					.status(401)
 					.json({
-						status: "401 : You're not authorized to change a user ID",
+						status: "Error 401 : You're not authorized to change a user ID",
 					});
 			} else {
 				updatedValues[field] = req.body[field];
@@ -196,23 +199,20 @@ export class User {
 		if (updatedValues) {
 			console.log(updatedValues);
 			console.log(id);
-			return Collections.users.updateOne(
+			return DBVars.users.updateOne(
 				{ _id: id },
 				{ $set: updatedValues }
 			)
 				.then((result) => {
 					let userData =
-						"http://" +
-						burl +
-						"/users/" +
-						id;
+						"http://" + burl + "/users/" + id;
 					result["links"] = {
 						href: userData,
 						method: "GET",
 						rel: "data",
 					};
 					res.status(201).json({
-						status: "201 : Ressource successfully created",
+						status: "Status 201 : Ressource successfully created",
 						result,
 					});
 				})
@@ -220,7 +220,7 @@ export class User {
 					res
 						.status(400)
 						.json({
-							status: "400 : Bad Request",
+							status: "Error 400 : Bad Request",
 							error: err,
 						})
 				);

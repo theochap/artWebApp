@@ -36,11 +36,11 @@ ConnectToDatabase().then(() => {
 
 	const privateWallRouter = express.Router();
 	PrivateWallMiddleware(privateWallRouter);
-	app.use("/wall/private", Authentificate.parseToken, Authentificate.authMiddleware, privateWallRouter);
+	app.use("/posts/private", Authentificate.parseToken, Authentificate.authMiddleware, privateWallRouter);
 
 	const publicWallRouter = express.Router();
 	PublicWallMiddleware(publicWallRouter);
-	app.use("/wall", publicWallRouter);
+	app.use("/posts", publicWallRouter);
 
 	app.get("/", (req, res) => { res.status(200).json({ text: "Status 200: Success" }) });
 

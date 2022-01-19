@@ -1,7 +1,7 @@
 import { Posts as PostSchema, Validator } from "../../schema/modelPosts.js";
 import { User as UserSchema } from "../../schema/modelUser.js";
 import { Request, Response } from "express";
-import { Collections } from "../../services/database.service.js";
+import { DBVars } from "../../services/database.service.js";
 import { ObjectId } from 'mongodb';
 
 var LIMIT_CONST = 15;
@@ -9,12 +9,12 @@ var LIMIT_CONST = 15;
 export class Posts {
 
 	static async updatePosts(req, res) {
-		const thisAuthorId = req.authData.id;
+		const thisAuthorId = req.authData._id;
 		try {
 
 			const lastPosts: Posts[] = new Array();
 
-			const lastPostsQuery = await Collections.posts.find<PostSchema>(
+			const lastPostsQuery = await DBVars.posts.find<PostSchema>(
 				{
 					$and: [{ "authors": thisAuthorId }, { "visible": true }]
 				},
@@ -28,7 +28,7 @@ export class Posts {
 				console.log(post);
 			});
 
-			const updatedUser = await Collections.posts.updateOne({ _id: thisAuthorId }, {
+			const updatedUser = await DBVars.posts.updateOne({ _id: thisAuthorId }, {
 				lastPosts: lastPosts
 			});
 			return res.status(200).json({ text: "Status 200: Success", updatedUser })
@@ -39,10 +39,10 @@ export class Posts {
 
 	static async add(req: Request, res: Response) {
 
-		const thisAuthorId = req.authData.id;
-		const { title, body, authorsId: authors }: { title: string, body: string, authorsId: ObjectId[] } = req.body;
-
-		if (!title || !body || !authors || !(authors.includes(thisAuthorId))) {
+		const thisAuthorId = req.authData._id;
+		const { title, body, authorsId }: { title: string, body: string, authorsId: ObjectId[] } = req.body;
+		console.log(authorsId, thisAuthorId);
+		if (!title || !body || !authorsId || !(authorsId.includes(thisAuthorId))) {
 			//No title / body / Authors / publisher is not an author
 			return res.status(400).json({
 				text: "Error 400: Invalid format"
@@ -54,13 +54,13 @@ export class Posts {
 		const validators: Validator[] = new Array();
 
 		// Check the visibility, if the sending author is the only author, set visibility to 1, otherwise init the authorizations and co-authors
-		authors.forEach(authorId => {
+		authorsId.forEach(authorId => {
 			console.log(authorId);
 			var valAuthor: Validator = (authorId != thisAuthorId) ? { authorId: authorId, validate: false } : { authorId: authorId, validate: true };
 			validators.push(valAuthor);
 		});
 
-		if (authors.length === 1) {
+		if (authorsId.length === 1) {
 			visible = true;
 		}
 		else {
@@ -68,13 +68,13 @@ export class Posts {
 		}
 
 		// Create the post.
-		const post = { title, body, authors, visible, validators };
+		const post = { title, body, authorsId, visible, validators };
 
 		try {
-			await Collections.posts.insertOne(post);
+			await DBVars.posts.insertOne(post);
 
 			return res.status(200).json({
-				text: "Success", title: post.title, message: post.body, authors: authors, visible: visible, validators: validators
+				text: "Success", title: post.title, message: post.body, authors: authorsId, visible: visible, validators: validators
 			});
 
 		} catch (error) {
@@ -85,11 +85,11 @@ export class Posts {
 
 	static async validate(req, res) {
 		const { postId } = req.body;
-		const thisAuthorId = req.authData.id;
+		const thisAuthorId = req.authData._id;
 
 		try {
 			const valAuth: Validator = { authorId: thisAuthorId, validate: true };
-			const postData = await Collections.posts.findOne({ $and: [{ _id: postId }, { "validators.author": thisAuthorId }] })
+			const postData = await DBVars.posts.findOne({ $and: [{ _id: postId }, { "validators.author": thisAuthorId }] })
 			const updatedValidators: Validator[] = new Array();
 
 			postData.validators.forEach(validator => {
@@ -103,7 +103,7 @@ export class Posts {
 			});
 
 			try {
-				const finalPostDataCursor = await Collections.posts.findOneAndUpdate({ $and: [{ _id: postId }, { validators: postData.validators }] },
+				const finalPostDataCursor = await DBVars.posts.findOneAndUpdate({ $and: [{ _id: postId }, { validators: postData.validators }] },
 					{ validators: updatedValidators }, { returnDocument: "after" });
 
 				const finalPostData = finalPostDataCursor.value;
@@ -114,7 +114,7 @@ export class Posts {
 				let visible = false;
 
 				if (fullyValidated) {
-					const updatedVisible = await Collections.posts.updateOne({ _id: postId }, { visible: true });
+					const updatedVisible = await DBVars.posts.updateOne({ _id: postId }, { visible: true });
 					visible = true;
 				}
 
@@ -130,7 +130,7 @@ export class Posts {
 	}
 
 	static async put(req, res) {
-		const thisAuthorId = req.authData.id;
+		const thisAuthorId = req.authData._id;
 		const postId = req.body.postId;
 		const updatedValues = {};
 
@@ -142,7 +142,7 @@ export class Posts {
 
 		if (updatedValues) {
 			try {
-				const wallPost = await Collections.posts.findOneAndUpdate({ $and: [{ _id: postId }, { "authors": thisAuthorId }] }, updatedValues);
+				const wallPost = await DBVars.posts.findOneAndUpdate({ $and: [{ _id: postId }, { "authors": thisAuthorId }] }, updatedValues);
 				return res.status(200).json({ text: "Status 200: Success", data: wallPost });
 			} catch (error) {
 				return res.status(404).json({ text: "Error 404: Ressource not found, unable to modify" });
@@ -156,7 +156,7 @@ export class Posts {
 		try {
 			const reqParams = req.query;
 
-			const wallPosts = await (Collections.posts.find(reqParams));
+			const wallPosts = await (DBVars.posts.find(reqParams));
 
 			return res.status(200).json({ text: "Status 200: Success", data: wallPosts });
 		} catch (error) {
@@ -171,7 +171,7 @@ export class Posts {
 	/* For testing purposes only */
 	static async delAll(req, res) {
 		try {
-			await Collections.posts.deleteMany({});
+			await DBVars.posts.deleteMany({});
 			return res.status(200).json({ text: "Status 200: Success" });
 
 		}
@@ -183,8 +183,8 @@ export class Posts {
 	static async del(req, res) {
 		try {
 
-			const id = (req.body.id);
-			await Collections.posts.deleteOne({ "_id": new ObjectId(id) });
+			const id = (req.body._id);
+			await DBVars.posts.deleteOne({ "_id": new ObjectId(id) });
 
 			return res.status(200).json({ text: "Status 200: Success" });
 

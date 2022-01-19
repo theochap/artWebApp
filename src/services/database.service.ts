@@ -3,22 +3,25 @@ import * as mongoDB from "mongodb"
 import * as dotenv from "dotenv"
 
 // Global Variables
-export const Collections: { users?: mongoDB.Collection, posts?: mongoDB.Collection } = {}
+export const DBVars: { users?: mongoDB.Collection, posts?: mongoDB.Collection, client?: mongoDB.MongoClient } = {}
 
 // Initialize Connection
 export async function ConnectToDatabase() {
     dotenv.config();
 
-    const client: mongoDB.MongoClient = new mongoDB.MongoClient(process.env.DB_CONN_STRING);
-    await client.connect();
+    const Client = new mongoDB.MongoClient(process.env.DB_CONN_STRING);
+    await Client.connect();
 
-    const db: mongoDB.Db = client.db(process.env.DB_NAME);
+    const db: mongoDB.Db = Client.db(process.env.DB_NAME);
 
     const usersCollection: mongoDB.Collection = db.collection("Users");
     const postsCollection: mongoDB.Collection = db.collection("Posts");
 
-    Collections.users = usersCollection;
-    Collections.posts = postsCollection;
+    DBVars.users = usersCollection;
+    DBVars.posts = postsCollection;
+    DBVars.client = Client;
+
+    await usersCollection.createIndexes([{ key: { pseudo: 1 }, unique: true }, { key: { email: 1 }, unique: true }]);
 
     console.log(`Successfully connected to db : ${db.databaseName}. Loaded the collections ${usersCollection.collectionName} and ${postsCollection.collectionName}`);
 

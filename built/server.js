@@ -32,10 +32,10 @@ var urlencodedParser = express_1.default.urlencoded({
     app.use("/users", publicUserRouter);
     var privateWallRouter = express_1.default.Router();
     (0, postController_1.PrivateWallMiddleware)(privateWallRouter);
-    app.use("/wall/private", userAuthentification_1.Authentificate.parseToken, userAuthentification_1.Authentificate.authMiddleware, privateWallRouter);
+    app.use("/posts/private", userAuthentification_1.Authentificate.parseToken, userAuthentification_1.Authentificate.authMiddleware, privateWallRouter);
     var publicWallRouter = express_1.default.Router();
     (0, postController_1.PublicWallMiddleware)(publicWallRouter);
-    app.use("/wall", publicWallRouter);
+    app.use("/posts", publicWallRouter);
     app.get("/", function (req, res) { res.status(200).json({ text: "Status 200: Success" }); });
     // Listen on port 8080
     var port = 8080;

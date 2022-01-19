@@ -78,6 +78,7 @@ var Authentificate = /** @class */ (function () {
                     case 2:
                         decode = _a.sent();
                         req.authData = decode;
+                        console.log(req.authData);
                         next();
                         return [3 /*break*/, 4];
                     case 3:

@@ -10,8 +10,8 @@ export interface Posts {
 	authors: [ObjectId],
 	title: string,
 	body: string,
-	timestamp: Date,
-	visible: boolean,
-	validators: Validator[]
+	timestamp?: Date,
+	visible?: boolean,
+	validators?: Validator[]
 };
 
