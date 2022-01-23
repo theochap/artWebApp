@@ -1,3 +1,4 @@
 /config/*
 /built/*
 /node_modules/*
+/package-lock.json
