@@ -6,7 +6,8 @@
 	"scripts": {
 		"start": "export NODE_ENV=prod && node built/server.js",
 		"start_dev": "export NODE_ENV=dev && nodemon built/server.js",
-		"test": "tsc && mocha built/test/user.js"
+		"test": "mocha built/test/user.js",
+		"compile-test": "tsc && mocha built/test/user.js"
 	},
 	"dependencies": {
 		"body-parser": "^1.19.0",
