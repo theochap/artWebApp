@@ -1,14 +1,14 @@
 // External Dependencies
 import * as mongoDB from "mongodb"
 import config from "config";
-
+var ip = require("ip");
 // Global Variables
 export const DBVars: { users?: mongoDB.Collection, posts?: mongoDB.Collection, client?: mongoDB.MongoClient } = {}
 
 // Initialize Connection
 export async function ConnectToDatabase() {
 
-    const dbConnString: string = config.get("db.prefix") + "://" + config.get("db.host") + ":" + config.get("db.port");
+    const dbConnString: string = config.get("db.prefix") + "://" + ip.address() + ":" + config.get("db.port");
     console.log(dbConnString);
 
     const Client = new mongoDB.MongoClient(dbConnString);

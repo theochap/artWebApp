@@ -9,7 +9,6 @@ import { app } from '../server';
 
 let should = chai.should();
 
-
 chai.use(chaiHttp);
 
 // Parent testing block
