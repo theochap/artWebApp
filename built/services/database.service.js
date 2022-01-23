@@ -62,7 +62,6 @@ exports.ConnectToDatabase = exports.DBVars = void 0;
 // External Dependencies
 var mongoDB = __importStar(require("mongodb"));
 var config_1 = __importDefault(require("config"));
-var ip = require("ip");
 // Global Variables
 exports.DBVars = {};
 // Initialize Connection
@@ -72,7 +71,7 @@ function ConnectToDatabase() {
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    dbConnString = config_1.default.get("db.prefix") + "://" + ip.address() + ":" + config_1.default.get("db.port");
+                    dbConnString = config_1.default.get("db.prefix") + "://" + config_1.default.get("db.host") + ":" + config_1.default.get("db.port");
                     console.log(dbConnString);
                     Client = new mongoDB.MongoClient(dbConnString);
                     return [4 /*yield*/, Client.connect()];
