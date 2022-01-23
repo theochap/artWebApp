@@ -6,7 +6,6 @@ export function PublicUserMiddleware(app) {
 	app.get("/", User.get);
 	app.post("/login", User.login);
 	app.post("/", User.signup);
-	app.delete("/", User.delAll);
 }
 
 export function PrivateUserMiddleware(app) {

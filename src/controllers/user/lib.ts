@@ -95,18 +95,6 @@ export class User {
 		}
 	}
 
-	/* For testing purposes only */
-	static async delAll(req: Request, res: Response) {
-		try {
-			await DBVars.users.deleteMany({});
-			return res.status(200).json({ text: "Status 200: Success" });
-
-		}
-		catch (error) {
-			res.status(400).json({ err: error });
-		}
-	}
-
 	static async delUser(req: Request, res: Response) {
 		const idStr: string = req.authData._id;
 		const id = new ObjectId(idStr);
