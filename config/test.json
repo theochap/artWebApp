@@ -1,0 +1,15 @@
+{
+    "app":{
+        "port":8082
+    },
+    "db":{
+        "prefix": "mongodb",
+        "host": "127.0.0.1",
+        "port": 27017,
+        "name": "ArteFact_Test",
+        "pass": "webApp_Test"
+    }, 
+    "jwt":{
+        "pass": "webApp_Test"
+    }
+}

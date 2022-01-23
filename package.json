@@ -31,7 +31,8 @@
 		"chai-http": "^4.3.0",
 		"mocha": "^8.4.0",
 		"nodemon": "^2.0.13",
-		"escalade":"^3.1.1"
+		"escalade":"^3.1.1",
+		"type-detect": "^4.0.8"
 	},
 	"peerDependencies": {
 		"@types/node": "^16.11.0"
