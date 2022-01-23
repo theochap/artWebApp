@@ -105,4 +105,20 @@ describe("Users", () => {
         });
 
     });
+
+
+    describe("/POST users/login", () => {
+        it("Should be able to connect an user to the API", done => {
+            let user = {
+                email: "test@gmail.com",
+                pseudo: "test",
+                password: "test"
+            }
+
+            chai.request(app).post("/users").send(user).then(() => {
+                chai.request(app).post
+            })
+        })
+    });
+
 });

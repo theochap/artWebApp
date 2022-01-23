@@ -6,7 +6,6 @@
 	"scripts": {
 		"start": "export NODE_ENV=prod && node built/server.js",
 		"start_dev": "export NODE_ENV=dev && nodemon built/server.js",
-		"start_tests": "export NODE_ENV=test && node built/server.js",
 		"test": "tsc && mocha built/test/user.js"
 	},
 	"dependencies": {
