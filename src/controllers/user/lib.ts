@@ -8,7 +8,6 @@ const burl = "localhost:8080";
 
 export class User {
 	static async authTest(req: Request, res: Response) {
-		console.log(req.authData);
 		if (req.authData) {
 			return res.status(203).json({ text: "Status 200: Access Authorized", data: req.authData });
 		}
@@ -111,10 +110,10 @@ export class User {
 	static async delUser(req: Request, res: Response) {
 		const idStr: string = req.authData._id;
 		const id = new ObjectId(idStr);
+		const deletePosts = req.body.deletePosts;
 
 		try {
 			const delUser = await DBVars.users.deleteOne({ _id: id });
-			const delPosts = await DBVars.posts.deleteMany({ authors: { $in: [id] } }, { retryWrites: true });
 
 			if (delUser.deletedCount == 0) {
 				return res.status(404).json({
@@ -122,14 +121,29 @@ export class User {
 				});
 
 			} else {
+				if (deletePosts) {
+					const delPosts = await DBVars.posts.deleteMany({ $and: [{ authors: idStr }, { authors: { $size: 1 } }] }, { retryWrites: true });
+					const updatedPosts = await DBVars.posts.updateMany(
+						{ $and: [{ authors: idStr }, { authors: { $size: { $gt: 1 } } }] },
+						{ authors: { $pull: idStr } });
 
-				return res
-					.status(200)
-					.json({
-						text: "Status 200: User deleted successfully",
-						delUser,
-						delPosts
-					});
+
+					return res
+						.status(200)
+						.json({
+							text: "Status 200: User and posts deleted successfully",
+							delUser,
+							delPosts
+						});
+
+				} else {
+					return res
+						.status(200)
+						.json({
+							text: "Status 200: User deleted successfully",
+							delUser,
+						});
+				}
 
 			}
 
@@ -144,9 +158,6 @@ export class User {
 				})
 		}
 	}
-
-
-
 
 	static async get(req: Request, res: Response) {
 
@@ -197,8 +208,6 @@ export class User {
 		});
 
 		if (updatedValues) {
-			console.log(updatedValues);
-			console.log(id);
 			return DBVars.users.updateOne(
 				{ _id: id },
 				{ $set: updatedValues }

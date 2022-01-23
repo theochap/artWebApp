@@ -11,12 +11,22 @@ var userController_1 = require("./controllers/userController");
 var userAuthentification_1 = require("./controllers/userAuthentification");
 var postController_1 = require("./controllers/postController");
 var database_service_1 = require("./services/database.service");
+var config_1 = __importDefault(require("config"));
+var morgan_1 = __importDefault(require("morgan"));
 // Create an express app
 var app = (0, express_1.default)();
 // Body Parser
 var urlencodedParser = express_1.default.urlencoded({
     extended: true
 });
+//don't show the log when it is test, and set morgan dev environment for development
+if (config_1.default.util.getEnv('NODE_ENV') == "dev") {
+    app.use((0, morgan_1.default)('dev'));
+}
+else if (config_1.default.util.getEnv('NODE_ENV') !== 'test') {
+    //use morgan to log at command line
+    app.use((0, morgan_1.default)('combined')); //'combined' outputs the Apache style LOGs
+}
 // DataBase connection
 (0, database_service_1.ConnectToDatabase)().then(function () {
     // CORS definition

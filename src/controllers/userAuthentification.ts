@@ -1,18 +1,15 @@
-import * as dotenv from "dotenv";
+import config from "config";
 const jwt = require("jsonwebtoken");
 
 export class Authentificate {
 
     static async authMiddleware(req, res, next) {
         const token: string = req.token;
-        dotenv.config();
-        console.log(token);
 
         if (token) {
             try {
-                const decode = await jwt.verify(token, process.env.JWT_PASS);
+                const decode = await jwt.verify(token, config.get("jwt.pass"));
                 req.authData = decode;
-                console.log(req.authData)
                 next();
             }
             catch (error) {
@@ -34,7 +31,6 @@ export class Authentificate {
         if (typeof authorizationHeader !== "undefined" && authorizationHeader.startsWith("Bearer ")) {
             const token = authorizationHeader.substring(7, authorizationHeader.length);
             req.token = token;
-            console.log(token);
             next();
         } else {
             res.status(403).json({

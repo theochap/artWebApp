@@ -39,10 +39,10 @@ export class Posts {
 
 	static async add(req: Request, res: Response) {
 
-		const thisAuthorId = req.authData._id;
-		const { title, body, authorsId }: { title: string, body: string, authorsId: ObjectId[] } = req.body;
-		console.log(authorsId, thisAuthorId);
-		if (!title || !body || !authorsId || !(authorsId.includes(thisAuthorId))) {
+		const thisAuthor = req.authData._id;
+		const { title, body, authors }: { title: string, body: string, authors: ObjectId[] } = req.body;
+		console.log(authors, thisAuthor);
+		if (!title || !body || !authors || !(authors.includes(thisAuthor))) {
 			//No title / body / Authors / publisher is not an author
 			return res.status(400).json({
 				text: "Error 400: Invalid format"
@@ -54,13 +54,13 @@ export class Posts {
 		const validators: Validator[] = new Array();
 
 		// Check the visibility, if the sending author is the only author, set visibility to 1, otherwise init the authorizations and co-authors
-		authorsId.forEach(authorId => {
-			console.log(authorId);
-			var valAuthor: Validator = (authorId != thisAuthorId) ? { authorId: authorId, validate: false } : { authorId: authorId, validate: true };
+		authors.forEach(author => {
+			console.log(author);
+			var valAuthor: Validator = (author != thisAuthor) ? { authorId: author, validate: false } : { authorId: author, validate: true };
 			validators.push(valAuthor);
 		});
 
-		if (authorsId.length === 1) {
+		if (authors.length === 1) {
 			visible = true;
 		}
 		else {
@@ -68,13 +68,13 @@ export class Posts {
 		}
 
 		// Create the post.
-		const post = { title, body, authorsId, visible, validators };
+		const post = { title, body, authors, visible, validators };
 
 		try {
-			await DBVars.posts.insertOne(post);
+			const retPost = await DBVars.posts.insertOne(post);
 
 			return res.status(200).json({
-				text: "Success", title: post.title, message: post.body, authors: authorsId, visible: visible, validators: validators
+				text: "Success", retPost
 			});
 
 		} catch (error) {
@@ -152,13 +152,19 @@ export class Posts {
 
 	}
 
-	static async get(req, res) {
+	static async get(req: Request, res: Response) {
 		try {
 			const reqParams = req.query;
 
-			const wallPosts = await (DBVars.posts.find(reqParams));
+			if (reqParams._id) {
+				reqParams._id = new ObjectId(reqParams._id);
+			}
 
-			return res.status(200).json({ text: "Status 200: Success", data: wallPosts });
+			const wallPosts = (DBVars.posts.find<PostSchema>(reqParams));
+			const returnedData = await wallPosts.toArray();
+
+			return res.status(200).json({ text: "Status 200: Success", returnedData });
+
 		} catch (error) {
 			return res.status(400).json({
 				text: "Error 400: bad request",

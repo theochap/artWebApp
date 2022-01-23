@@ -1,6 +1,6 @@
 import { ObjectId } from "mongodb";
 import jwt = require("jwt-simple");
-import * as dotenv from "dotenv";
+import config from "config";
 import passwordHash = require("password-hash");
 
 export class User {
@@ -22,8 +22,7 @@ export class User {
 
     public getToken(): string {
         const data = { _id: this._id };
-        dotenv.config();
-        return jwt.encode(data, process.env.JWT_PASS);
+        return jwt.encode(data, config.get("jwt.pass"));
     }
 
     public authenticate(password) {

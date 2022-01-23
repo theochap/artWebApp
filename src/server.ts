@@ -6,6 +6,8 @@ import { PublicUserMiddleware, PrivateUserMiddleware } from "./controllers/userC
 import { Authentificate } from './controllers/userAuthentification';
 import { PublicWallMiddleware, PrivateWallMiddleware } from './controllers/postController';
 import { ConnectToDatabase } from './services/database.service';
+import config from "config";
+import morgan from "morgan";
 
 // Create an express app
 const app = express();
@@ -15,6 +17,14 @@ const urlencodedParser = express.urlencoded({
 	extended: true
 
 });
+
+//don't show the log when it is test, and set morgan dev environment for development
+if (config.util.getEnv('NODE_ENV') == "dev") {
+	app.use(morgan('dev'));
+} else if (config.util.getEnv('NODE_ENV') !== 'test') {
+	//use morgan to log at command line
+	app.use(morgan('combined')); //'combined' outputs the Apache style LOGs
+}
 
 // DataBase connection
 

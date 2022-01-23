@@ -1,18 +1,20 @@
 // External Dependencies
 import * as mongoDB from "mongodb"
-import * as dotenv from "dotenv"
+import config from "config";
 
 // Global Variables
 export const DBVars: { users?: mongoDB.Collection, posts?: mongoDB.Collection, client?: mongoDB.MongoClient } = {}
 
 // Initialize Connection
 export async function ConnectToDatabase() {
-    dotenv.config();
 
-    const Client = new mongoDB.MongoClient(process.env.DB_CONN_STRING);
+    const dbConnString: string = config.get("db.prefix") + "://" + config.get("db.host") + ":" + config.get("db.port");
+    console.log(dbConnString);
+
+    const Client = new mongoDB.MongoClient(dbConnString);
     await Client.connect();
 
-    const db: mongoDB.Db = Client.db(process.env.DB_NAME);
+    const db: mongoDB.Db = Client.db(config.get("db.name"));
 
     const usersCollection: mongoDB.Collection = db.collection("Users");
     const postsCollection: mongoDB.Collection = db.collection("Posts");
