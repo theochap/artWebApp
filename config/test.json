@@ -5,7 +5,7 @@
     "db":{
         "prefix": "mongodb",
         "host": "localhost",
-        "port": 5432,
+        "port": 27017,
         "name": "ArteFact_Test",
         "pass": "webApp_Test"
     }, 
