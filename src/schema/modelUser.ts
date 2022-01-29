@@ -8,7 +8,7 @@ export class User {
         public _id: ObjectId,
         public pseudo: string,
         public email: string,
-        private password?: string,
+        public password?: string,
         public lastPosts?: [{
             id: string,
             authors: string[],

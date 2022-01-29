@@ -7,7 +7,7 @@
 		"start": "export NODE_ENV=prod && node built/server.js",
 		"start_dev": "export NODE_ENV=dev && nodemon built/server.js",
 		"test": "mocha built/test/user.js",
-		"compile-test": "tsc && mocha built/test/user.js"
+		"compile-test": "tsc && mocha -t 10000 built/test/user.js"
 	},
 	"dependencies": {
 		"body-parser": "^1.19.0",
@@ -22,7 +22,8 @@
 		"morgan": "^1.10.0",
 		"password-hash": "^1.2.2",
 		"qs": "^6.10.3",
-		"tar": "^6.1.11"
+		"tar": "^6.1.11",
+		"typescript": "^4.5.5"
 	},
 	"devDependencies": {
 		"@types/chai": "^4.3.0",
