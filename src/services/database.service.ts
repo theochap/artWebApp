@@ -19,6 +19,8 @@ export async function ConnectToDatabase() {
     const usersCollectionName: string = config.get("collections.users")
     const usersCollection = db.collection(usersCollectionName);
 
+    await usersCollection.createIndexes([{ key: { pseudo: 1 }, unique: true }, { key: { email: 1 }, unique: true }]);
+
     await db.command({
         "collMod": usersCollectionName,
         "validator": {
@@ -33,7 +35,6 @@ export async function ConnectToDatabase() {
     DBVars.posts = postsCollection;
     DBVars.client = Client;
 
-    await usersCollection.createIndexes([{ key: { pseudo: 1 }, unique: true }, { key: { email: 1 }, unique: true }]);
 
     if (config.util.getEnv('NODE_ENV') !== 'test') {
         console.log(`Successfully connected to db : ${db.databaseName}. Loaded the collections ${usersCollection.collectionName} and ${postsCollection.collectionName}`);
