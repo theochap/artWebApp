@@ -13,9 +13,9 @@ export class User {
 			return res.status(203).json({ text: "Status 203: Access Authorized", data: req.authData });
 		}
 		else {
-			return res.status(400)
+			return res.status(403)
 				.json({
-					error: "Error 400: Bad Request"
+					error: "Error 403: Bad Request"
 				})
 		}
 
@@ -199,6 +199,16 @@ export class User {
 				{ $set: updatedValues }
 			)
 				.then((result) => {
+					if (result.matchedCount == 0) {
+						return res.status(404).json({
+							status: "Error 404: No matched users",
+							result
+						})
+					} else if (result.modifiedCount == 0) {
+						return res.status(304).json({
+							status: "Status 304: Ressource not modified"
+						})
+					}
 					let userData =
 						"http://" + burl + "/users/" + id;
 					result["links"] = {
@@ -206,7 +216,7 @@ export class User {
 						method: "GET",
 						rel: "data",
 					};
-					res.status(201).json({
+					return res.status(201).json({
 						status: "Status 201 : Ressource successfully created",
 						result,
 					});

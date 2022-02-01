@@ -2,7 +2,7 @@
 process.env.NODE_ENV = "test";
 
 import { User as UserSchema } from "../schema/modelUser";
-import { DBVars } from '../services/database.service';
+import { ConnectToDatabase, DBVars } from '../services/database.service';
 import chai from "chai";
 import chaiHttp from "chai-http";
 import { app } from '../server';
@@ -33,10 +33,9 @@ async function loginTestUser(app: Application, user: { email: string, password: 
 
 // Parent testing block
 describe("Users", () => {
-    // Before each test, empty the db
-    beforeEach((done) => {
-        DBVars.users.deleteMany({}, done);
-    });
+
+    // Before each test, connect to the database and empty the db
+    beforeEach((done) => { ConnectToDatabase().then(() => { DBVars.users.deleteMany({}, done) }) });
 
     // Test the GET route
     describe("/GET users", () => {
@@ -167,6 +166,7 @@ describe("Users", () => {
                 email: "test@gmail.co",
                 password: "test"
             };
+
             let user2 = {
                 email: "test@gmail.com",
                 password: "test1"
@@ -194,17 +194,72 @@ describe("Users", () => {
     });
 
     // Test authentification
-    describe("/GET /users/auth", () => {
+    describe("/GET /users/private/auth", () => {
         it("Should execute correctly if the good token is provided", async () => {
-            let user = {
+            const user = {
                 email: "test@gmail.com",
                 password: "test",
                 pseudo: "test"
             }
             createTestUser(app, user);
-            let resLogin = await loginTestUser(app, user);
-            let resAuth = await chai.request(app).get("/users/private/auth").set("Authorization", "Bearer " + resLogin.body.token);
+            const resLogin = await loginTestUser(app, user);
+            const resAuth = await chai.request(app).get("/users/private/auth").set("Authorization", "Bearer " + resLogin.body.token);
             resAuth.should.have.status(203);
+        });
+        it("Should fail otherwise", async () => {
+            const resAuth = await chai.request(app).get("/users/private/auth").set("Authorization", "Bearer ");
+            resAuth.should.have.status(403);
+
+        });
+    });
+
+    // Test update route
+    describe("/PUT /users/private/", () => {
+        it("Should be able to update the data of a single user", async () => {
+            const user = {
+                email: "test@gmail.com",
+                password: "test",
+                pseudo: "test"
+            };
+
+            const userUpdated = {
+                email: "newTest@gmail.com",
+                password: "newTest",
+                pseudo: "newTest",
+            };
+
+            createTestUser(app, user);
+            const resLogin = await loginTestUser(app, user);
+            const resUpdated = await chai.request(app).put("/users/private")
+                .set("Authorization", "Bearer " + resLogin.body.token).send(userUpdated);
+
+            resUpdated.should.have.status(201);
+            resUpdated.body.should.have.property("result");
+            resUpdated.body.result.should.have.property("modifiedCount").eql(1);
+            resUpdated.body.result.should.have.property("matchedCount").eql(1);
+        });
+
+        it("Shouldn't update the user if one tries to update the id", async () => {
+            const user = {
+                email: "test@gmail.com",
+                password: "test",
+                pseudo: "test"
+            };
+
+            const userUpdated = {
+                _id: "12345"
+            };
+
+            createTestUser(app, user);
+            const resLogin = await loginTestUser(app, user);
+            const resUpdated = await chai.request(app).put("/users/private")
+                .set("Authorization", "Bearer " + resLogin.body.token).send(userUpdated);
+
+            resUpdated.should.have.status(401);
+        });
+
+        it("Shouldn't update the user with wrong fields", async () => {
+
         })
     })
 

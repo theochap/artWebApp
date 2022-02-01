@@ -28,4 +28,25 @@ export class User {
     public authenticate(password) {
         return passwordHash.verify(password, this.password);
     }
+
+    public static DBValidator() {
+        return {
+            bsonType: "object",
+            required: ["pseudo", "email", "password"],
+            properties: {
+                pseudo: {
+                    bsonType: "string",
+                    description: "must be a string and is required"
+                },
+                email: {
+                    bsonType: "string",
+                    description: "must be a string and is required"
+                },
+                password: {
+                    bsonType: "string",
+                    description: "must be a string and is required"
+                },
+            }
+        }
+    }
 }

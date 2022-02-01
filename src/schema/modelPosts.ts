@@ -15,3 +15,6 @@ export interface Posts {
 	validators?: Validator[]
 };
 
+export const PostsValidator = {
+
+}
