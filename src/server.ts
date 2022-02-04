@@ -9,8 +9,8 @@ import { ConnectToDatabase } from './services/database.service';
 import config from "config";
 import morgan from "morgan";
 
-// Create an express app
-const app = express();
+// Create an express app, exported for testing purposes
+export const app = express();
 
 // Body Parser
 const urlencodedParser = express.urlencoded({
@@ -56,7 +56,9 @@ ConnectToDatabase().then(() => {
 
 	// Listen on port 8080
 	const port = 8080;
+
 	app.listen(port, () => console.log(`Listening on port ${port}`));
+
 
 }).catch(err => {
 	console.log(err);

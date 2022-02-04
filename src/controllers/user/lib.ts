@@ -3,18 +3,19 @@ import { Request, Response } from "express";
 import { User as UserSchema } from "../../schema/modelUser";
 import { ObjectId } from "mongodb";
 import passwordHash = require("password-hash");
+import { fail } from "assert";
 const jwt = require("jsonwebtoken");
 const burl = "localhost:8080";
 
 export class User {
 	static async authTest(req: Request, res: Response) {
 		if (req.authData) {
-			return res.status(203).json({ text: "Status 200: Access Authorized", data: req.authData });
+			return res.status(203).json({ text: "Status 203: Access Authorized", data: req.authData });
 		}
 		else {
-			return res.status(400)
+			return res.status(403)
 				.json({
-					error: "Error 400: Bad Request"
+					error: "Error 403: Bad Request"
 				})
 		}
 
@@ -72,15 +73,12 @@ export class User {
 			// Verify that the user exists
 
 			const findUserDoc = await DBVars.users.findOne({ email: email });
+
 			const findUser = new UserSchema(findUserDoc._id, findUserDoc.pseudo, findUserDoc.email, findUserDoc.password);
-			if (!findUser)
-				return res.status(404).json({
-					text: "Error 404: This user does not exist",
-				});
-			if (!findUser.authenticate(password))
-				return res.status(401).json({
-					text: "Error 401: Invalid password",
-				});
+
+			if (!findUser.authenticate(password)) {
+				throw new Error("Can't authenticate")
+			}
 
 			return res.status(200).json({
 				token: findUser.getToken(),
@@ -88,22 +86,10 @@ export class User {
 				text: "Status 200: Successful authentification",
 			});
 		} catch (error) {
-			return res.status(500).json({
-				text: "Error 500: internal server error",
+			return res.status(404).json({
+				text: "Error 404: Invalid credentials",
 				error,
 			});
-		}
-	}
-
-	/* For testing purposes only */
-	static async delAll(req: Request, res: Response) {
-		try {
-			await DBVars.users.deleteMany({});
-			return res.status(200).json({ text: "Status 200: Success" });
-
-		}
-		catch (error) {
-			res.status(400).json({ err: error });
 		}
 	}
 
@@ -213,6 +199,16 @@ export class User {
 				{ $set: updatedValues }
 			)
 				.then((result) => {
+					if (result.matchedCount == 0) {
+						return res.status(404).json({
+							status: "Error 404: No matched users",
+							result
+						})
+					} else if (result.modifiedCount == 0) {
+						return res.status(304).json({
+							status: "Status 304: Ressource not modified"
+						})
+					}
 					let userData =
 						"http://" + burl + "/users/" + id;
 					result["links"] = {
@@ -220,7 +216,7 @@ export class User {
 						method: "GET",
 						rel: "data",
 					};
-					res.status(201).json({
+					return res.status(201).json({
 						status: "Status 201 : Ressource successfully created",
 						result,
 					});
