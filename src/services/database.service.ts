@@ -2,6 +2,8 @@
 import * as mongoDB from "mongodb"
 import config from "config";
 import { User } from "../schema/modelUser";
+import { PostsValidator } from "../schema/modelPosts";
+import { Posts } from "../schema/modelPosts";
 
 // Global Variables
 export const DBVars: { users?: mongoDB.Collection, posts?: mongoDB.Collection, client?: mongoDB.MongoClient } = {}
@@ -16,10 +18,11 @@ export async function ConnectToDatabase() {
 
     const db: mongoDB.Db = Client.db(config.get("db.name"));
 
-    const usersCollectionName: string = config.get("collections.users")
-    const usersCollection = db.collection(usersCollectionName);
+    const postsCollectionName: string = config.get<Posts>("collections.posts");
+    const postsCollection = db.collection(postsCollectionName);
 
-    await usersCollection.createIndexes([{ key: { pseudo: 1 }, unique: true }, { key: { email: 1 }, unique: true }]);
+    const usersCollectionName: string = config.get<User>("collections.users")
+    const usersCollection = db.collection(usersCollectionName);
 
     await db.command({
         "collMod": usersCollectionName,
@@ -29,7 +32,15 @@ export async function ConnectToDatabase() {
         "validationLevel": "moderate"
     });
 
-    const postsCollection: mongoDB.Collection = db.collection(config.get("collections.posts"));
+    await usersCollection.createIndexes([{ key: { pseudo: 1 }, unique: true }, { key: { email: 1 }, unique: true }]);
+
+    await db.command({
+        "collMod": postsCollectionName,
+        "validator": {
+            $jsonSchema: PostsValidator,
+            "validationLevel": "moderate"
+        }
+    });
 
     DBVars.users = usersCollection;
     DBVars.posts = postsCollection;

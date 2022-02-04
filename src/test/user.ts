@@ -35,7 +35,9 @@ async function loginTestUser(app: Application, user: { email: string, password: 
 describe("Users", () => {
 
     // Before each test, connect to the database and empty the db
-    beforeEach((done) => { ConnectToDatabase().then(() => { DBVars.users.deleteMany({}, done) }) });
+    before(() => ConnectToDatabase());
+
+    beforeEach(() => DBVars.users.deleteMany({}));
 
     // Test the GET route
     describe("/GET users", () => {
