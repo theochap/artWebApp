@@ -261,9 +261,30 @@ describe("Users", () => {
         });
 
         it("Shouldn't update the user with wrong fields", async () => {
+            const user = {
+                email: "test@gmail.com",
+                password: "test",
+                pseudo: "test"
+            };
 
-        })
-    })
+            const userUpdated = {
+                wrongField: "12345"
+            };
+
+            createTestUser(app, user);
+            const resLogin = await loginTestUser(app, user);
+            const resUpdated = await chai.request(app).put("/users/private")
+                .set("Authorization", "Bearer " + resLogin.body.token).send(userUpdated);
+
+            resUpdated.should.have.status(201);
+
+            const resGet = await chai.request(app).get("/users").query({ email: "test@gmail.com" });
+
+            resGet.body.should.not.have.property("wrongField"); // Enforce schema validation
+        });
+
+
+    });
 
 
 });

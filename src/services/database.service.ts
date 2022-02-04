@@ -24,6 +24,15 @@ export async function ConnectToDatabase() {
     const usersCollectionName: string = config.get<User>("collections.users")
     const usersCollection = db.collection(usersCollectionName);
 
+
+    await db.command({
+        "collMod": postsCollectionName,
+        "validator": {
+            $jsonSchema: PostsValidator,
+            "validationLevel": "moderate"
+        }
+    });
+
     await db.command({
         "collMod": usersCollectionName,
         "validator": {
@@ -33,14 +42,6 @@ export async function ConnectToDatabase() {
     });
 
     await usersCollection.createIndexes([{ key: { pseudo: 1 }, unique: true }, { key: { email: 1 }, unique: true }]);
-
-    await db.command({
-        "collMod": postsCollectionName,
-        "validator": {
-            $jsonSchema: PostsValidator,
-            "validationLevel": "moderate"
-        }
-    });
 
     DBVars.users = usersCollection;
     DBVars.posts = postsCollection;
