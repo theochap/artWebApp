@@ -11,7 +11,7 @@ export class User {
         public password?: string,
         public lastPosts?: [{
             id: string,
-            authors: string[],
+            authors: ObjectId[],
             title: string
             body: string,
             timestamp: Date,

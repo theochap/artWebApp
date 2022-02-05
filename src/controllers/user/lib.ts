@@ -9,17 +9,19 @@ const burl = "localhost:8080";
 
 export class User {
 	static async authTest(req: Request, res: Response) {
-		if (req.authData) {
-			return res.status(203).json({ text: "Status 203: Access Authorized", data: req.authData });
+		try {
+			if (req.authData) {
+				return res.status(203).json({ text: "Status 203: Access Authorized", data: req.authData });
+			}
+			else {
+				return res.status(403)
+					.json({
+						error: "Error 403: Bad Request"
+					})
+			}
+		} catch (error) {
+			return res.status(500).json(error)
 		}
-		else {
-			return res.status(403)
-				.json({
-					error: "Error 403: Bad Request"
-				})
-		}
-
-
 	}
 
 	static async signup(req: Request, res: Response) {
@@ -93,8 +95,7 @@ export class User {
 	}
 
 	static async delUser(req: Request, res: Response) {
-		const idStr: string = req.authData._id;
-		const id = new ObjectId(idStr);
+		const id: ObjectId = req.authData._id;
 		const deletePosts = req.body.deletePosts;
 
 		try {
@@ -107,10 +108,10 @@ export class User {
 
 			} else {
 				if (deletePosts) {
-					const delPosts = await DBVars.posts.deleteMany({ $and: [{ authors: idStr }, { authors: { $size: 1 } }] }, { retryWrites: true });
+					const delPosts = await DBVars.posts.deleteMany({ $and: [{ authors: id }, { authors: { $size: 1 } }] }, { retryWrites: true });
 					const updatedPosts = await DBVars.posts.updateMany(
-						{ $and: [{ authors: idStr }, { authors: { $size: { $gt: 1 } } }] },
-						{ authors: { $pull: idStr } });
+						{ $and: [{ authors: id }, { authors: { $size: { $gt: 1 } } }] },
+						{ authors: { $pull: id } });
 
 
 					return res
@@ -172,8 +173,7 @@ export class User {
 
 	static async updateUserById(req: Request, res: Response) {
 
-		const idStr: string = req.authData._id;
-		const id = new ObjectId(idStr);
+		const id: ObjectId = req.authData._id;
 		let updatedValues = {};
 		Object.keys(req.body).forEach((field) => {
 			if (field == "password") {

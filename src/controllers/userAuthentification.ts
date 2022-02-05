@@ -9,11 +9,13 @@ export class Authentificate {
 
         if (token) {
             try {
-                const decode: { _id: ObjectId } = await jwt.verify(token, config.get("jwt.pass"));
-                req.authData = decode;
+                const decode: { _id: string } = await jwt.verify(token, config.get("jwt.pass"));
+                const id = ObjectId.createFromHexString(decode._id);
+                req.authData = { _id: id };
                 next();
             }
             catch (error) {
+                console.log(error)
                 return res.status(400).json({ text: "Error 400: Token invalid", err: error })
             }
         }

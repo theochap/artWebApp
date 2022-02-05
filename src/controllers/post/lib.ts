@@ -39,11 +39,12 @@ export class Posts {
 
 	static async add(req: Request, res: Response) {
 
-		const thisAuthor: string = req.authData._id;
+		const thisAuthor: ObjectId = req.authData._id;
 		const { title, body, authors }: { title: string, body: string, authors: string[] } = req.body;
 
-		if (!title || !body || !authors || !Array.isArray(authors) || !(authors.includes(thisAuthor))) {
+		if (!title || !body || !authors || !Array.isArray(authors) || !(authors.includes(thisAuthor.toHexString()))) {
 			//No title / body / Authors / publisher is not an author
+
 			return res.status(400).json({
 				text: "Error 400: Invalid format"
 			});
@@ -52,11 +53,16 @@ export class Posts {
 		var visible: boolean;
 
 		const validators: Array<Validator> = new Array();
+		const authorsId: Array<ObjectId> = new Array();
 
 		// Check the visibility, if the sending author is the only author, set visibility to 1, otherwise init the authorizations and co-authors
 		authors.forEach(author => {
-			var valAuthor: Validator = (author != thisAuthor) ? { authorId: author, validate: false } : { authorId: author, validate: true };
+			const authorId = new ObjectId(author)
+			authorsId.push(authorId)
+
+			var valAuthor: Validator = (authorId != thisAuthor) ? { authorId: authorId, validate: false } : { authorId: authorId, validate: true };
 			validators.push(valAuthor);
+
 		});
 
 		if (authors.length === 1) {
@@ -67,7 +73,7 @@ export class Posts {
 		}
 
 		// Create the post.
-		const post = { authors, title, body, visible, validators };
+		const post = { authors: authorsId, title, body, visible, validators };
 
 		try {
 			const retPost = await DBVars.posts.insertOne(post);

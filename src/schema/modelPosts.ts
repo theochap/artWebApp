@@ -1,13 +1,13 @@
 import { ObjectId } from "mongodb";
 
 export interface Validator {
-	authorId: string,
+	authorId: ObjectId,
 	validate: boolean
 }
 
 export interface Posts {
 	_id?: ObjectId,
-	authors: [string],
+	authors: [ObjectId],
 	title: string,
 	body: string,
 	timestamp?: Date,
@@ -28,7 +28,7 @@ export const PostsValidator = {
 		authors: {
 			bsonType: "array",
 			items: {
-				bsonType: "string",
+				bsonType: "objectId",
 				description: "should be an objectId indicating the author objectId"
 			},
 			uniqueItems: true,
@@ -44,13 +44,13 @@ export const PostsValidator = {
 		},
 		validators: {
 			bsonType: "array",
-			description: "must be an array of objects",
+			description: "must be an array of objects containing an authorID (objectId) and a validate property (string)",
 			items: {
 				bsonType: "object",
 				additionalProperties: false,
 				properties: {
 					authorId: {
-						bsonType: "string",
+						bsonType: "objectId",
 						description: "must be a string",
 					},
 					validate: {
