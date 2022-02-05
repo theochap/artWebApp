@@ -98,12 +98,8 @@ describe("Users", () => {
                 pseudo: "test",
                 password: "test"
             }
-            chai.request(app).post("/users").send(user).end((_, res) => {
-                res.should.have.status(201);
-                res.body.should.have.property("id");
-                res.body.should.have.property("text").eql("201 Success : User created")
-                done();
-            });
+            CreateTestUser(app, user)
+            done()
         });
         it("Should not be able to POST the same user another time", done => {
             let user = {
