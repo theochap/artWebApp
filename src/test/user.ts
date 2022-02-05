@@ -19,7 +19,7 @@ export async function CreateTestUser(app: Application, user: { email: string, ps
     const res = await chai.request(app).post("/users").send(user);
     res.should.have.status(201);
     res.body.should.have.property("id");
-    res.body.should.have.property("text").eql("201 Success : User created");
+    res.body.should.have.property("status").eql("201 Success : User created");
     return res;
 }
 
@@ -64,7 +64,7 @@ describe("Users", () => {
             chai.request(app).post("/users").send(user).end((_, res) => {
                 res.should.have.status(400);
                 res.body.should.be.a("object");
-                res.body.text.should.be.eql("Error 400: Bad request");
+                res.body.status.should.be.eql("Error 400: Bad request");
                 done();
             });
         });
@@ -76,7 +76,7 @@ describe("Users", () => {
             chai.request(app).post("/users").send(user).end((_, res) => {
                 res.should.have.status(400);
                 res.body.should.be.a("object");
-                res.body.text.should.be.eql("Error 400: Bad request");
+                res.body.status.should.be.eql("Error 400: Bad request");
                 done();
             });
         });
@@ -88,7 +88,7 @@ describe("Users", () => {
             chai.request(app).post("/users").send(user).end((_, res) => {
                 res.should.have.status(400);
                 res.body.should.be.a("object");
-                res.body.text.should.be.eql("Error 400: Bad request");
+                res.body.status.should.be.eql("Error 400: Bad request");
                 done();
             });
         });
@@ -110,13 +110,13 @@ describe("Users", () => {
             chai.request(app).post("/users").send(user).end((_, res) => {
                 res.should.have.status(201);
                 res.body.should.have.property("id");
-                res.body.should.have.property("text").eql("201 Success : User created")
+                res.body.should.have.property("status").eql("201 Success : User created")
             });
 
             chai.request(app).post("/users").send(user).end((_, res) => {
                 res.should.have.status(400);
                 res.body.should.have.property("error");
-                res.body.should.have.property("text").eql("Error 400: Impossible to create a new user");
+                res.body.should.have.property("status").eql("Error 400: Impossible to create a new user");
                 done();
             });
 
@@ -237,15 +237,15 @@ describe("Users", () => {
 
             let res1 = await chai.request(app).post("/users/login").send(user1);
             res1.should.have.status(404);
-            res1.body.should.have.property("text").eql("Error 404: Invalid credentials");
+            res1.body.should.have.property("status").eql("Error 404: Invalid credentials");
 
             let res2 = await chai.request(app).post("/users/login").send(user2);
             res2.should.have.status(404);
-            res1.body.should.have.property("text").eql("Error 404: Invalid credentials");
+            res1.body.should.have.property("status").eql("Error 404: Invalid credentials");
 
             let res3 = await chai.request(app).post("/users/login").send(user3);
             res3.should.have.status(400);
-            res3.body.should.have.property("text").eql("Error 400 : Invalid request");
+            res3.body.should.have.property("status").eql("Error 400 : Invalid request");
 
         });
 

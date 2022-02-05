@@ -11,12 +11,12 @@ export class User {
 	static async authTest(req: Request, res: Response) {
 		try {
 			if (req.authData) {
-				return res.status(203).json({ text: "Status 203: Access Authorized", data: req.authData });
+				return res.status(203).json({ status: "Status 203: Access Authorized", data: req.authData });
 			}
 			else {
 				return res.status(403)
 					.json({
-						error: "Error 403: Bad Request"
+						status: "Error 403: Bad Request"
 					})
 			}
 		} catch (error) {
@@ -30,7 +30,7 @@ export class User {
 		if (!email || !password || !pseudo) {
 			// email, password or pseudo empty
 			return res.status(400).json({
-				text: "Error 400: Bad request",
+				status: "Error 400: Bad request",
 			});
 		}
 
@@ -52,13 +52,13 @@ export class User {
 			);
 
 			return res.status(201).json({
-				text: "201 Success : User created",
+				status: "201 Success : User created",
 				id: userObject.insertedId,
 			});
 
 		}
 		catch (error) {
-			return res.status(400).json({ text: "Error 400: Impossible to create a new user", error });
+			return res.status(400).json({ status: "Error 400: Impossible to create a new user", error });
 		}
 
 	}
@@ -67,7 +67,7 @@ export class User {
 		const { password, email }: { password: string, email: string } = req.body;
 		if (!email || !password) {
 			return res.status(400).json({
-				text: "Error 400 : Invalid request",
+				status: "Error 400 : Invalid request",
 			});
 		}
 		try {
@@ -84,11 +84,11 @@ export class User {
 			return res.status(200).json({
 				token: findUser.getToken(),
 				id: findUser._id,
-				text: "Status 200: Successful authentification",
+				status: "Status 200: Successful authentification",
 			});
 		} catch (error) {
 			return res.status(404).json({
-				text: "Error 404: Invalid credentials",
+				status: "Error 404: Invalid credentials",
 				error,
 			});
 		}
@@ -103,7 +103,7 @@ export class User {
 
 			if (delUser.deletedCount == 0) {
 				return res.status(404).json({
-					error: "Error 404: the user to delete has not been found"
+					status: "Error 404: the user to delete has not been found"
 				});
 
 			} else {
@@ -117,7 +117,7 @@ export class User {
 					return res
 						.status(200)
 						.json({
-							text: "Status 200: User and posts deleted successfully",
+							status: "Status 200: User and posts deleted successfully",
 							delUser,
 							delPosts
 						});
@@ -126,7 +126,7 @@ export class User {
 					return res
 						.status(200)
 						.json({
-							text: "Status 200: User deleted successfully",
+							status: "Status 200: User deleted successfully",
 							delUser,
 						});
 				}
@@ -149,6 +149,7 @@ export class User {
 
 		const reqParams = req.query;
 
+		// Converts the request id to an objectId because the get request parameters are strings
 		if (reqParams._id) {
 			reqParams._id = new ObjectId(reqParams._id);
 		}

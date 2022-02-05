@@ -31,7 +31,7 @@ export class Posts {
 			const updatedUser = await DBVars.posts.updateOne({ _id: thisAuthorId }, {
 				lastPosts: lastPosts
 			});
-			return res.status(200).json({ text: "Status 200: Success", updatedUser })
+			return res.status(200).json({ status: "Status 200: Success", updatedUser })
 		} catch (error) {
 			return res.status(404).json({ error: "Error 404: Unable to update the last posts of this user" });
 		}
@@ -46,7 +46,7 @@ export class Posts {
 			//No title / body / Authors / publisher is not an author
 
 			return res.status(400).json({
-				text: "Error 400: Invalid format"
+				status: "Error 400: Invalid format"
 			});
 		}
 
@@ -79,12 +79,12 @@ export class Posts {
 			const retPost = await DBVars.posts.insertOne(post);
 
 			return res.status(201).json({
-				status: "Status 201: Post created", retPost
+				status: "Status 201: Post created", result: retPost
 			});
 
 		} catch (error) {
 			console.log(error)
-			return res.status(400).json({ text: "Error 400 : Bad request", error });
+			return res.status(400).json({ status: "Error 400 : Bad request", error });
 		}
 
 	}
@@ -124,14 +124,14 @@ export class Posts {
 					visible = true;
 				}
 
-				return res.status(200).json({ text: "Status 200: Success", validators: finalPostData.validators, visible: visible });
+				return res.status(200).json({ status: "Status 200: Success", validators: finalPostData.validators, visible: visible });
 
 			} catch (error) {
-				return res.status(410).json({ text: "Error 410: the ressource you are trying to access is not available anymore", error: error });
+				return res.status(410).json({ status: "Error 410: the ressource you are trying to access is not available anymore", error: error });
 			}
 
 		} catch (error) {
-			return res.status(404).json({ text: "Error 404: not found", error: error });
+			return res.status(404).json({ status: "Error 404: not found", error: error });
 		}
 	}
 
@@ -149,9 +149,9 @@ export class Posts {
 		if (updatedValues) {
 			try {
 				const wallPost = await DBVars.posts.findOneAndUpdate({ $and: [{ _id: postId }, { "authors": thisAuthorId }] }, updatedValues);
-				return res.status(200).json({ text: "Status 200: Success", data: wallPost });
+				return res.status(200).json({ status: "Status 200: Success", result: wallPost });
 			} catch (error) {
-				return res.status(404).json({ text: "Error 404: Ressource not found, unable to modify" });
+				return res.status(404).json({ status: "Error 404: Ressource not found, unable to modify" });
 			}
 
 		}
@@ -169,11 +169,11 @@ export class Posts {
 			const wallPosts = (DBVars.posts.find<PostSchema>(reqParams));
 			const returnedData = await wallPosts.toArray();
 
-			return res.status(200).json({ text: "Status 200: Success", returnedData });
+			return res.status(200).json({ status: "Status 200: Success", result: returnedData });
 
 		} catch (error) {
 			return res.status(400).json({
-				text: "Error 400: bad request",
+				status: "Error 400: bad request",
 				error
 			}
 			);
@@ -184,7 +184,7 @@ export class Posts {
 	static async delAll(req, res) {
 		try {
 			await DBVars.posts.deleteMany({});
-			return res.status(200).json({ text: "Status 200: Success" });
+			return res.status(200).json({ status: "Status 200: Success" });
 
 		}
 		catch (error) {
@@ -198,7 +198,7 @@ export class Posts {
 			const id = (req.body._id);
 			await DBVars.posts.deleteOne({ "_id": new ObjectId(id) });
 
-			return res.status(200).json({ text: "Status 200: Success" });
+			return res.status(200).json({ status: "Status 200: Success" });
 
 		}
 		catch (error) {

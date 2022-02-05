@@ -3,6 +3,11 @@ import jwt = require("jwt-simple");
 import config from "config";
 import passwordHash = require("password-hash");
 
+export interface UserCredentials {
+    email: string,
+    pseudo: string,
+    password: string
+}
 export class User {
     constructor(
         public _id: ObjectId,
