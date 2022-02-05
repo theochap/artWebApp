@@ -33,7 +33,11 @@ export class User {
         return {
             bsonType: "object",
             required: ["pseudo", "email", "password"],
+            additionalProperties: false,
             properties: {
+                _id: {
+                    bsonType: "objectId"
+                },
                 pseudo: {
                     bsonType: "string",
                     description: "must be a string and is required"

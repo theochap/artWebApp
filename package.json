@@ -7,7 +7,7 @@
 		"start": "export NODE_ENV=prod && node built/server.js",
 		"start_dev": "export NODE_ENV=dev && nodemon built/server.js",
 		"test": "mocha --exit built/test/user.js",
-		"compile-test": "tsc && mocha --exit -t 10000 built/test/user.js"
+		"compile-test": "tsc && mocha --exit -t 10000 built/test/*"
 	},
 	"dependencies": {
 		"body-parser": "^1.19.0",

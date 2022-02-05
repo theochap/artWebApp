@@ -38,7 +38,6 @@ export class User {
 			email: email,
 			pseudo: pseudo,
 			password: passwordHash.generate(password),
-			toConfirm: []
 		};
 
 		// verify that a user already exists

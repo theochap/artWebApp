@@ -7,7 +7,7 @@ export function PublicWallMiddleware(app) {
 
 export function PrivateWallMiddleware(app) {
 	app.post("/", Posts.add);
-	app.unlock("/", Posts.validate);
+	app.post("/validate", Posts.validate);
 	app.delete("/", Posts.del);
 	app.put("/", Posts.put);
 	app.patch("/", Posts.updatePosts);

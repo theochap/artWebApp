@@ -1,13 +1,13 @@
 import { ObjectId } from "mongodb";
 
 export interface Validator {
-	authorId: ObjectId,
+	authorId: string,
 	validate: boolean
 }
 
 export interface Posts {
-	_id: ObjectId,
-	authors: [ObjectId],
+	_id?: ObjectId,
+	authors: [string],
 	title: string,
 	body: string,
 	timestamp?: Date,
@@ -17,25 +17,48 @@ export interface Posts {
 
 export const PostsValidator = {
 	bsonType: "object",
-	required: ["authors", "title", "body"],
+	required: ["authors", "title", "body", "visible"],
+	additionalProperties: false,
 	properties: {
-		authors: {
-			bsonType: "array",
-			items: {
-				bsonType: "objectId",
-				description: "should be an objectId indicating the author objectId"
-			},
-			uniqueItems: true,
-			minItems: 1,
-			description: "must be an array of unique objectIds and is required"
-		},
+		_id: { bsonType: "objectId" },
 		title: {
 			bsonType: "string",
 			description: "must be a string and is required"
+		},
+		authors: {
+			bsonType: "array",
+			items: {
+				bsonType: "string",
+				description: "should be an objectId indicating the author objectId"
+			},
+			uniqueItems: true,
+			description: "must be an array of unique objectIds and is required"
 		},
 		body: {
 			bsonType: "string",
 			description: "must be a string and is required"
 		},
+		visible: {
+			bsonType: "bool",
+			description: "must be a boolean and is required"
+		},
+		validators: {
+			bsonType: "array",
+			description: "must be an array of objects",
+			items: {
+				bsonType: "object",
+				additionalProperties: false,
+				properties: {
+					authorId: {
+						bsonType: "string",
+						description: "must be a string",
+					},
+					validate: {
+						bsonType: "bool",
+						description: "must be a boolean",
+					}
+				}
+			}
+		}
 	}
 };

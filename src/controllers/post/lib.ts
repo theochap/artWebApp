@@ -39,10 +39,10 @@ export class Posts {
 
 	static async add(req: Request, res: Response) {
 
-		const thisAuthor = req.authData._id;
-		const { title, body, authors }: { title: string, body: string, authors: ObjectId[] } = req.body;
-		console.log(authors, thisAuthor);
-		if (!title || !body || !authors || !(authors.includes(thisAuthor))) {
+		const thisAuthor: string = req.authData._id;
+		const { title, body, authors }: { title: string, body: string, authors: string[] } = req.body;
+
+		if (!title || !body || !authors || !Array.isArray(authors) || !(authors.includes(thisAuthor))) {
 			//No title / body / Authors / publisher is not an author
 			return res.status(400).json({
 				text: "Error 400: Invalid format"
@@ -51,11 +51,10 @@ export class Posts {
 
 		var visible: boolean;
 
-		const validators: Validator[] = new Array();
+		const validators: Array<Validator> = new Array();
 
 		// Check the visibility, if the sending author is the only author, set visibility to 1, otherwise init the authorizations and co-authors
 		authors.forEach(author => {
-			console.log(author);
 			var valAuthor: Validator = (author != thisAuthor) ? { authorId: author, validate: false } : { authorId: author, validate: true };
 			validators.push(valAuthor);
 		});
@@ -68,17 +67,18 @@ export class Posts {
 		}
 
 		// Create the post.
-		const post = { title, body, authors, visible, validators };
+		const post = { authors, title, body, visible, validators };
 
 		try {
 			const retPost = await DBVars.posts.insertOne(post);
 
-			return res.status(200).json({
-				text: "Success", retPost
+			return res.status(201).json({
+				status: "Status 201: Post created", retPost
 			});
 
 		} catch (error) {
-			return res.status(500).json({ error });
+			console.log(error)
+			return res.status(400).json({ text: "Error 400 : Bad request", error });
 		}
 
 	}

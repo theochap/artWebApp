@@ -1,4 +1,5 @@
 import config from "config";
+import { ObjectId } from "mongodb";
 const jwt = require("jsonwebtoken");
 
 export class Authentificate {
@@ -8,7 +9,7 @@ export class Authentificate {
 
         if (token) {
             try {
-                const decode = await jwt.verify(token, config.get("jwt.pass"));
+                const decode: { _id: ObjectId } = await jwt.verify(token, config.get("jwt.pass"));
                 req.authData = decode;
                 next();
             }

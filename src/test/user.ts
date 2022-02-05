@@ -15,7 +15,7 @@ let should = chai.should();
 
 chai.use(chaiHttp);
 
-async function createTestUser(app: Application, user: { email: string, pseudo: string, password: string }) {
+export async function CreateTestUser(app: Application, user: { email: string, pseudo: string, password: string }) {
     const res = await chai.request(app).post("/users").send(user);
     res.should.have.status(201);
     res.body.should.have.property("id");
@@ -23,7 +23,7 @@ async function createTestUser(app: Application, user: { email: string, pseudo: s
     return res;
 }
 
-async function loginTestUser(app: Application, user: { email: string, password: string }) {
+export async function LoginTestUser(app: Application, user: { email: string, password: string }) {
     const res = await chai.request(app).post("/users/login").send(user);
     res.should.have.status(200);
     res.body.should.have.property("token");
@@ -39,9 +39,9 @@ describe("Users", () => {
 
     beforeEach(() => DBVars.users.deleteMany({}));
 
-    // Test the GET route
-    describe("/GET users", () => {
-        it("Sould GET an empty set of users", (done) => {
+    // Test the GET route to verify that the database was well emptied
+    describe("/GET users void", () => {
+        it("Should initially GET an empty set of users", (done) => {
             chai.request(app).get("/users").end((_, res) => {
                 res.should.have.status(200);
                 res.should.be.a("object");
@@ -50,7 +50,9 @@ describe("Users", () => {
                 done();
             });
         });
+
     });
+
 
     // Test the POST route
     describe("/POST users", () => {
@@ -126,6 +128,64 @@ describe("Users", () => {
 
     });
 
+    // Test user getter
+    describe("/GET /users/", () => {
+        it("Should be able to retrieve the user by id correctly", async () => {
+            const user = {
+                email: "test@gmail.com",
+                password: "test",
+                pseudo: "test"
+            }
+            let userCreated = await CreateTestUser(app, user);
+
+            let resGet = await chai.request(app).get("/users/").query({ _id: userCreated.body.id })
+            resGet.should.have.status(200)
+            resGet.body.returnedData.should.be.a("array");
+            resGet.body.returnedData.should.have.lengthOf(1)
+            resGet.body.returnedData[0].should.have.property('email').eql("test@gmail.com")
+            resGet.body.returnedData[0].should.have.property('pseudo').eql("test")
+
+        });
+        it("Should be able to retrieve the user by another property correctly", async () => {
+            const user = {
+                email: "test@gmail.com",
+                password: "test",
+                pseudo: "test"
+            }
+            let userCreated = await CreateTestUser(app, user);
+
+            let resGet = await chai.request(app).get("/users/").query({ email: user.email })
+            resGet.should.have.status(200)
+            resGet.body.returnedData.should.be.a("array");
+            resGet.body.returnedData.should.have.lengthOf(1)
+            resGet.body.returnedData[0].should.have.property('email').eql("test@gmail.com")
+            resGet.body.returnedData[0].should.have.property('pseudo').eql("test")
+
+            resGet = await chai.request(app).get("/users/").query({ pseudo: user.pseudo })
+            resGet.should.have.status(200)
+            resGet.body.returnedData.should.be.a("array");
+            resGet.body.returnedData.should.have.lengthOf(1)
+            resGet.body.returnedData[0].should.have.property('email').eql("test@gmail.com")
+            resGet.body.returnedData[0].should.have.property('pseudo').eql("test")
+
+        })
+
+        it("Should fail otherwise", async () => {
+            const user = {
+                email: "test@gmail.com",
+                password: "test",
+                pseudo: "test"
+            }
+            let userCreated = await CreateTestUser(app, user);
+
+            let resGet = await chai.request(app).get("/users/").query({ email: "falsemail" })
+            resGet.should.have.status(200)
+            resGet.body.returnedData.should.be.a("array");
+            resGet.body.returnedData.should.have.lengthOf(0)
+
+        });
+    });
+
 
     // Test login route
     describe("/POST /users/login", () => {
@@ -142,7 +202,7 @@ describe("Users", () => {
                 password: "test"
             }
 
-            const PostRes = await createTestUser(app, userDefine);
+            const PostRes = await CreateTestUser(app, userDefine);
 
             const LoginRes = await chai.request(app).post("/users/login").send(userLogin);
 
@@ -177,7 +237,7 @@ describe("Users", () => {
                 email: "test@gmail.com"
             };
 
-            const postRes = await createTestUser(app, user0);
+            const postRes = await CreateTestUser(app, user0);
 
             let res1 = await chai.request(app).post("/users/login").send(user1);
             res1.should.have.status(404);
@@ -203,8 +263,8 @@ describe("Users", () => {
                 password: "test",
                 pseudo: "test"
             }
-            createTestUser(app, user);
-            const resLogin = await loginTestUser(app, user);
+            CreateTestUser(app, user);
+            const resLogin = await LoginTestUser(app, user);
             const resAuth = await chai.request(app).get("/users/private/auth").set("Authorization", "Bearer " + resLogin.body.token);
             resAuth.should.have.status(203);
         });
@@ -230,8 +290,8 @@ describe("Users", () => {
                 pseudo: "newTest",
             };
 
-            createTestUser(app, user);
-            const resLogin = await loginTestUser(app, user);
+            CreateTestUser(app, user);
+            const resLogin = await LoginTestUser(app, user);
             const resUpdated = await chai.request(app).put("/users/private")
                 .set("Authorization", "Bearer " + resLogin.body.token).send(userUpdated);
 
@@ -252,8 +312,8 @@ describe("Users", () => {
                 _id: "12345"
             };
 
-            createTestUser(app, user);
-            const resLogin = await loginTestUser(app, user);
+            CreateTestUser(app, user);
+            const resLogin = await LoginTestUser(app, user);
             const resUpdated = await chai.request(app).put("/users/private")
                 .set("Authorization", "Bearer " + resLogin.body.token).send(userUpdated);
 
@@ -271,16 +331,14 @@ describe("Users", () => {
                 wrongField: "12345"
             };
 
-            createTestUser(app, user);
-            const resLogin = await loginTestUser(app, user);
+            CreateTestUser(app, user);
+            const resLogin = await LoginTestUser(app, user);
             const resUpdated = await chai.request(app).put("/users/private")
                 .set("Authorization", "Bearer " + resLogin.body.token).send(userUpdated);
 
-            resUpdated.should.have.status(201);
-
-            const resGet = await chai.request(app).get("/users").query({ email: "test@gmail.com" });
-
-            resGet.body.should.not.have.property("wrongField"); // Enforce schema validation
+            resUpdated.should.have.status(400);
+            resUpdated.body.should.have.property("error")
+            resUpdated.body.error.should.have.property("code").eql(121)
         });
 
 

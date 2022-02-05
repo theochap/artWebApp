@@ -18,10 +18,10 @@ export async function ConnectToDatabase() {
 
     const db: mongoDB.Db = Client.db(config.get("db.name"));
 
-    const postsCollectionName: string = config.get<Posts>("collections.posts");
+    const postsCollectionName: string = config.get("collections.posts");
     const postsCollection = db.collection(postsCollectionName);
 
-    const usersCollectionName: string = config.get<User>("collections.users")
+    const usersCollectionName: string = config.get("collections.users")
     const usersCollection = db.collection(usersCollectionName);
 
 
@@ -29,8 +29,8 @@ export async function ConnectToDatabase() {
         "collMod": postsCollectionName,
         "validator": {
             $jsonSchema: PostsValidator,
-            "validationLevel": "moderate"
-        }
+        },
+        "validationLevel": "moderate"
     });
 
     await db.command({
