@@ -173,8 +173,8 @@ export class User {
 	}
 
 	static async updateUserById(req: Request, res: Response) {
-
 		const id: ObjectId = req.authData._id;
+
 		let updatedValues = {};
 		Object.keys(req.body).forEach((field) => {
 			if (field == "password") {

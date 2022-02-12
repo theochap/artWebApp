@@ -2,7 +2,7 @@
 process.env.NODE_ENV = "test";
 
 import { User as UserSchema, UserCredentials } from "../schema/modelUser";
-import { Posts as PostSchema } from "../controllers/post/lib";
+import { Posts as PostSchema } from "../schema/modelPosts";
 import { ConnectToDatabase, DBVars } from '../services/database.service';
 import chai from "chai";
 import chaiHttp from "chai-http";
@@ -17,7 +17,7 @@ import { ObjectId } from "mongodb";
 let should = chai.should();
 
 var authToken: string
-var authId: string
+var authId: ObjectId
 
 var testUser: UserCredentials = {
     email: "test@gmail.com",
@@ -25,7 +25,7 @@ var testUser: UserCredentials = {
     password: "test"
 }
 
-var testPost = {
+var testPost: PostSchema = {
     title: "Hello !",
     body: "This is a test",
     authors: [authId]
@@ -38,7 +38,6 @@ async function CreateTestPost(app: Application, user: UserCredentials, post: Pos
 
     const res = await chai.request(app).post("/posts/").set("Authorization", authToken).send(post)
     res.should.have.status(201)
-    res.body.should.have.property("status").eql("Status 201: Post created")
     return res
 }
 
@@ -65,7 +64,7 @@ describe("Posts", () => {
         })
 
         it("Shouldn't create a post otherwise", async () => {
-            let postList: { title?: string, body?: string, authors?: Array<string> }[] = [{
+            let postList: { title?: string, body?: string, authors?: Array<ObjectId> }[] = [{
                 title: "Hello !",
                 body: "This is a test"
             }, {
@@ -95,6 +94,82 @@ describe("Posts", () => {
             resGet.should.have.status(200)
             resGet.body.result.should.be.a('array')
             resGet.body.result.should.have.lengthOf(1)
+        })
+
+    })
+
+    describe("/PUT /posts/", () => {
+        it("Should update the post if correct parameters are supplied", async () => {
+            const resPost = await CreateTestPost(app, testUser, testPost)
+
+            let updatedPost = {
+                updatedFields: {
+                    title: "Hello world!",
+                    body: "This is an update test",
+                }, postId: resPost.body.result.insertedId
+            }
+
+
+            const resUpdated = await chai.request(app).put("/posts/").set("Authorization", authToken).send(updatedPost)
+            resUpdated.should.have.status(200)
+            resUpdated.body.should.have.property("result")
+            resUpdated.body.result.should.have.property("matchedCount").eql(1)
+            resUpdated.body.result.should.have.property("modifiedCount").eql(1)
+        })
+
+        it("Should fail if wrong parameters are supplied (schema validation)", async () => {
+            const resPost = await CreateTestPost(app, testUser, testPost)
+
+            let updatedFields = {
+                title: "Hello world!",
+                wrongParameter: "This is an update test",
+            }
+
+            let updatedPost = {
+                updatedFields, postId: resPost.body.result.insertedId
+            }
+
+            const postId = resPost.body.result.insertedId
+
+            const resUpdated = await chai.request(app).put("/posts/").set("Authorization", authToken).send(updatedPost)
+            resUpdated.should.have.status(400)
+        })
+
+        it("Should not modify the post if the user is not the author", async () => {
+            const newTestUser = { email: "test2@gmail.com", pseudo: "test2", password: "test2" }
+            const resPost = await CreateTestPost(app, testUser, testPost)
+
+            await CreateTestUser(app, newTestUser)
+            const resLogin = await LoginTestUser(app, newTestUser)
+
+            const updatedPost = {
+                updatedFields: {
+                    title: "Hello world!",
+                    body: "This is an update test",
+                }, postId: resPost.body.result.insertedId
+            }
+
+            const resUpdated = await chai.request(app).put("/posts/").set("Authorization", "Bearer " + resLogin.body.token).send(updatedPost)
+            resUpdated.should.have.status(404)
+        })
+    })
+
+    describe("/DELETE /posts/", async () => {
+        it("Should delete the post when the correct credential is provided", async () => {
+            const resPost = await CreateTestPost(app, testUser, testPost)
+
+            const resDeleted = await chai.request(app).delete("/posts/").set("Authorization", authToken).send({ _id: resPost.body.result.insertedId })
+            resDeleted.should.have.status(200)
+        })
+        it("Shouldn't delete the post if the user is not the author", async () => {
+            const newTestUser = { email: "test2@gmail.com", pseudo: "test2", password: "test2" }
+            const resPost = await CreateTestPost(app, testUser, testPost)
+
+            await CreateTestUser(app, newTestUser)
+            const resLogin = await LoginTestUser(app, newTestUser)
+
+            const resDeleted = await chai.request(app).delete("/posts/").set("Authorization", "Bearer " + resLogin.body.token).send({ _id: resPost.body.result.insertedId })
+            resDeleted.should.have.status(404)
         })
 
     })

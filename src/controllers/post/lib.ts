@@ -8,8 +8,11 @@ var LIMIT_CONST = 15;
 
 export class Posts {
 
-	static async updatePosts(req, res) {
-		const thisAuthorId = req.authData._id;
+	static async updatePosts(req: Request, res: Response) {
+
+		const author: string = req.authData._id;
+		const thisAuthorId: ObjectId = new ObjectId(author)
+
 		try {
 
 			const lastPosts: Posts[] = new Array();
@@ -33,7 +36,7 @@ export class Posts {
 			});
 			return res.status(200).json({ status: "Status 200: Success", updatedUser })
 		} catch (error) {
-			return res.status(404).json({ error: "Error 404: Unable to update the last posts of this user" });
+			return res.status(400).json({ error: "Error 400: Unable to update the last posts of this user" });
 		}
 	}
 
@@ -79,17 +82,17 @@ export class Posts {
 			const retPost = await DBVars.posts.insertOne(post);
 
 			return res.status(201).json({
-				status: "Status 201: Post created", result: retPost
+				result: retPost
 			});
 
 		} catch (error) {
 			console.log(error)
-			return res.status(400).json({ status: "Error 400 : Bad request", error });
+			return res.status(400).json({ error });
 		}
 
 	}
 
-	static async validate(req, res) {
+	static async validate(req: Request, res: Response) {
 		const { postId } = req.body;
 		const thisAuthorId = req.authData._id;
 
@@ -135,26 +138,27 @@ export class Posts {
 		}
 	}
 
-	static async put(req, res) {
-		const thisAuthorId = req.authData._id;
-		const postId = req.body.postId;
-		const updatedValues = {};
+	static async put(req: Request, res: Response) {
+		const authorId: ObjectId = req.authData._id;
 
-		Object.keys(req.body).forEach((key) => {
-			if (["title", "body"].includes(key)) {
-				updatedValues[key] = req.body[key];
+		const postIdStr: string = req.body.postId;
+		const postId: ObjectId = new ObjectId(postIdStr);
+
+		const updatedValues: { title?: string, body?: string } = req.body.updatedFields;
+
+		try {
+			const resUpdate = await DBVars.posts.updateOne({ _id: postId, authors: authorId }, { $set: updatedValues });
+			if (resUpdate.matchedCount == 0) {
+				return res.status(404).json({ result: resUpdate })
+			} else if (resUpdate.modifiedCount == 0) {
+				return res.status(304).json({ result: resUpdate })
+			} else {
+				return res.status(200).json({ result: resUpdate });
 			}
-		});
-
-		if (updatedValues) {
-			try {
-				const wallPost = await DBVars.posts.findOneAndUpdate({ $and: [{ _id: postId }, { "authors": thisAuthorId }] }, updatedValues);
-				return res.status(200).json({ status: "Status 200: Success", result: wallPost });
-			} catch (error) {
-				return res.status(404).json({ status: "Error 404: Ressource not found, unable to modify" });
-			}
-
+		} catch (error) {
+			return res.status(400).json({ error: error });
 		}
+
 
 	}
 
@@ -180,29 +184,20 @@ export class Posts {
 		}
 	}
 
-	/* For testing purposes only */
-	static async delAll(req, res) {
+	static async del(req: Request, res: Response) {
 		try {
-			await DBVars.posts.deleteMany({});
-			return res.status(200).json({ status: "Status 200: Success" });
+			const idStr: string = (req.body._id);
+			const id: ObjectId = new ObjectId(idStr)
+			const resDelete = await DBVars.posts.deleteOne({ _id: id, authors: req.authData._id });
 
+			if (resDelete.deletedCount == 0) {
+				return res.status(404).json({ result: resDelete })
+			} else {
+				return res.status(200).json({ result: resDelete });
+			}
 		}
 		catch (error) {
-			res.status(400).json({ err: error });
-		}
-	}
-
-	static async del(req, res) {
-		try {
-
-			const id = (req.body._id);
-			await DBVars.posts.deleteOne({ "_id": new ObjectId(id) });
-
-			return res.status(200).json({ status: "Status 200: Success" });
-
-		}
-		catch (error) {
-			res.status(400).json({ err: error });
+			res.status(400).json({ error: error });
 		}
 	}
 }
