@@ -252,7 +252,7 @@ describe("Users", () => {
     });
 
     // Test authentification
-    describe("/GET /users/private/auth", () => {
+    describe("/GET /users/auth", () => {
         it("Should execute correctly if the good token is provided", async () => {
             const user = {
                 email: "test@gmail.com",
@@ -261,18 +261,18 @@ describe("Users", () => {
             }
             CreateTestUser(app, user);
             const resLogin = await LoginTestUser(app, user);
-            const resAuth = await chai.request(app).get("/users/private/auth").set("Authorization", "Bearer " + resLogin.body.token);
+            const resAuth = await chai.request(app).get("/users/auth").set("Authorization", "Bearer " + resLogin.body.token);
             resAuth.should.have.status(203);
         });
         it("Should fail otherwise", async () => {
-            const resAuth = await chai.request(app).get("/users/private/auth").set("Authorization", "Bearer ");
+            const resAuth = await chai.request(app).get("/users/auth").set("Authorization", "Bearer ");
             resAuth.should.have.status(403);
 
         });
     });
 
     // Test update route
-    describe("/PUT /users/private/", () => {
+    describe("/PUT /users/", () => {
         it("Should be able to update the data of a single user", async () => {
             const user = {
                 email: "test@gmail.com",
@@ -288,7 +288,7 @@ describe("Users", () => {
 
             CreateTestUser(app, user);
             const resLogin = await LoginTestUser(app, user);
-            const resUpdated = await chai.request(app).put("/users/private")
+            const resUpdated = await chai.request(app).put("/users/")
                 .set("Authorization", "Bearer " + resLogin.body.token).send(userUpdated);
 
             resUpdated.should.have.status(201);
@@ -310,7 +310,7 @@ describe("Users", () => {
 
             CreateTestUser(app, user);
             const resLogin = await LoginTestUser(app, user);
-            const resUpdated = await chai.request(app).put("/users/private")
+            const resUpdated = await chai.request(app).put("/users/")
                 .set("Authorization", "Bearer " + resLogin.body.token).send(userUpdated);
 
             resUpdated.should.have.status(401);
@@ -329,7 +329,7 @@ describe("Users", () => {
 
             CreateTestUser(app, user);
             const resLogin = await LoginTestUser(app, user);
-            const resUpdated = await chai.request(app).put("/users/private")
+            const resUpdated = await chai.request(app).put("/users/")
                 .set("Authorization", "Bearer " + resLogin.body.token).send(userUpdated);
 
             resUpdated.should.have.status(400);

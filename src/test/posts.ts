@@ -36,7 +36,7 @@ async function CreateTestPost(app: Application, user: UserCredentials, post: Pos
 
     authToken = "Bearer " + resLogin.body.token;
 
-    const res = await chai.request(app).post("/posts/private").set("Authorization", authToken).send(post)
+    const res = await chai.request(app).post("/posts/").set("Authorization", authToken).send(post)
     res.should.have.status(201)
     res.body.should.have.property("status").eql("Status 201: Post created")
     return res
@@ -77,7 +77,7 @@ describe("Posts", () => {
             }];
 
             postList.forEach(async post => {
-                const res = await chai.request(app).post("/posts/private").set("Authorization", authToken).send(post)
+                const res = await chai.request(app).post("/posts/").set("Authorization", authToken).send(post)
                 res.should.have.status(400)
                 res.body.should.have.property("text").eql("Error 400: Invalid format")
             })
@@ -96,5 +96,7 @@ describe("Posts", () => {
             resGet.body.result.should.be.a('array')
             resGet.body.result.should.have.lengthOf(1)
         })
+
     })
+
 })

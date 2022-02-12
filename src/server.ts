@@ -36,21 +36,23 @@ ConnectToDatabase().then(() => {
 	app.use(express.json());
 
 	// Router definition
-	const privateUserRouter = express.Router();
-	PrivateUserMiddleware(privateUserRouter);
-	app.use("/users/private", Authentificate.parseToken, Authentificate.authMiddleware, privateUserRouter);
 
 	const publicUserRouter = express.Router();
 	PublicUserMiddleware(publicUserRouter);
 	app.use("/users", publicUserRouter);
 
-	const privateWallRouter = express.Router();
-	PrivateWallMiddleware(privateWallRouter);
-	app.use("/posts/private", Authentificate.parseToken, Authentificate.authMiddleware, privateWallRouter);
+	const privateUserRouter = express.Router();
+	PrivateUserMiddleware(privateUserRouter);
+	app.use("/users/", Authentificate.parseToken, Authentificate.authMiddleware, privateUserRouter);
 
 	const publicWallRouter = express.Router();
 	PublicWallMiddleware(publicWallRouter);
 	app.use("/posts", publicWallRouter);
+
+	const privateWallRouter = express.Router();
+	PrivateWallMiddleware(privateWallRouter);
+	app.use("/posts/", Authentificate.parseToken, Authentificate.authMiddleware, privateWallRouter);
+
 
 	app.get("/", (req, res) => { res.status(200).json({ text: "Status 200: Success" }) });
 
