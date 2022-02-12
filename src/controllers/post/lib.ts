@@ -1,8 +1,9 @@
-import { Posts as PostSchema, Validator } from "../../schema/modelPosts.js";
+import { Posts as PostSchema } from "../../schema/modelPosts.js";
 import { User as UserSchema } from "../../schema/modelUser.js";
 import { Request, Response } from "express";
 import { DBVars } from "../../services/database.service.js";
 import { ObjectId } from 'mongodb';
+import { post } from "jquery";
 
 var LIMIT_CONST = 15;
 
@@ -43,9 +44,9 @@ export class Posts {
 	static async add(req: Request, res: Response) {
 
 		const thisAuthor: ObjectId = req.authData._id;
-		const { title, body, authors }: { title: string, body: string, authors: string[] } = req.body;
+		const { title, body, authors: authorsStr }: { title: string, body: string, authors: string[] } = req.body;
 
-		if (!title || !body || !authors || !Array.isArray(authors) || !(authors.includes(thisAuthor.toHexString()))) {
+		if (!title || !body || !authorsStr || !Array.isArray(authorsStr) || !(authorsStr.includes(thisAuthor.toHexString()))) {
 			//No title / body / Authors / publisher is not an author
 
 			return res.status(400).json({
@@ -53,36 +54,27 @@ export class Posts {
 			});
 		}
 
-		var visible: boolean;
-
-		const validators: Array<Validator> = new Array();
-		const authorsId: Array<ObjectId> = new Array();
+		const authors: Array<ObjectId> = new Array();
+		const validators: Array<ObjectId> = new Array();
 
 		// Check the visibility, if the sending author is the only author, set visibility to 1, otherwise init the authorizations and co-authors
-		authors.forEach(author => {
+		authorsStr.forEach(author => {
 			const authorId = new ObjectId(author)
-			authorsId.push(authorId)
-
-			var valAuthor: Validator = (authorId != thisAuthor) ? { authorId: authorId, validate: false } : { authorId: authorId, validate: true };
-			validators.push(valAuthor);
-
+			authors.push(authorId)
+			if (author != thisAuthor.toString()) {
+				validators.push(authorId)
+			}
 		});
 
-		if (authors.length === 1) {
-			visible = true;
-		}
-		else {
-			visible = false;
-		}
-
 		// Create the post.
-		const post = { authors: authorsId, title, body, visible, validators };
+		const post = { authors, title, body, validators, timestamp: new Date() };
 
 		try {
 			const retPost = await DBVars.posts.insertOne(post);
 
 			return res.status(201).json({
-				result: retPost
+				result: retPost,
+				insertedPost: post
 			});
 
 		} catch (error) {
@@ -93,49 +85,26 @@ export class Posts {
 	}
 
 	static async validate(req: Request, res: Response) {
-		const { postId } = req.body;
+		const { postId: postIdStr } = req.body;
+		const postId = new ObjectId(postIdStr)
 		const thisAuthorId = req.authData._id;
 
 		try {
-			const valAuth: Validator = { authorId: thisAuthorId, validate: true };
-			const postData = await DBVars.posts.findOne({ $and: [{ _id: postId }, { "validators.author": thisAuthorId }] })
-			const updatedValidators: Validator[] = new Array();
+			const finalPostDataCursor = await DBVars.posts.updateOne({ _id: postId },
+				{ $pull: { validators: thisAuthorId } });
 
-			postData.validators.forEach(validator => {
-
-				if (validator.author == thisAuthorId) {
-					updatedValidators.push({ authorId: thisAuthorId, validate: true });
-				}
-				else {
-					updatedValidators.push({ authorId: validator.author, validate: validator.validate });
-				}
-			});
-
-			try {
-				const finalPostDataCursor = await DBVars.posts.findOneAndUpdate({ $and: [{ _id: postId }, { validators: postData.validators }] },
-					{ validators: updatedValidators }, { returnDocument: "after" });
-
-				const finalPostData = finalPostDataCursor.value;
-
-				let fullyValidated = true;
-				finalPostData.validators.forEach(Validator => fullyValidated = (Validator.validate == false) ? false : fullyValidated);
-
-				let visible = false;
-
-				if (fullyValidated) {
-					const updatedVisible = await DBVars.posts.updateOne({ _id: postId }, { visible: true });
-					visible = true;
-				}
-
-				return res.status(200).json({ status: "Status 200: Success", validators: finalPostData.validators, visible: visible });
-
-			} catch (error) {
-				return res.status(410).json({ status: "Error 410: the ressource you are trying to access is not available anymore", error: error });
+			if (finalPostDataCursor.modifiedCount == 0) {
+				return res.status(304).json({ result: finalPostDataCursor })
+			} else if (finalPostDataCursor.matchedCount == 0) {
+				return res.status(404).json({ result: finalPostDataCursor })
+			} else {
+				return res.status(201).json({ result: finalPostDataCursor });
 			}
 
 		} catch (error) {
-			return res.status(404).json({ status: "Error 404: not found", error: error });
+			return res.status(400).json({ error: error });
 		}
+
 	}
 
 	static async put(req: Request, res: Response) {
@@ -153,7 +122,7 @@ export class Posts {
 			} else if (resUpdate.modifiedCount == 0) {
 				return res.status(304).json({ result: resUpdate })
 			} else {
-				return res.status(200).json({ result: resUpdate });
+				return res.status(201).json({ result: resUpdate });
 			}
 		} catch (error) {
 			return res.status(400).json({ error: error });

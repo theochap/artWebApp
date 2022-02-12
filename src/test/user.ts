@@ -140,7 +140,6 @@ describe("Users", () => {
             resGet.body.returnedData.should.have.lengthOf(1)
             resGet.body.returnedData[0].should.have.property('email').eql("test@gmail.com")
             resGet.body.returnedData[0].should.have.property('pseudo').eql("test")
-
         });
         it("Should be able to retrieve the user by another property correctly", async () => {
             const user = {
@@ -313,7 +312,7 @@ describe("Users", () => {
             const resUpdated = await chai.request(app).put("/users/")
                 .set("Authorization", "Bearer " + resLogin.body.token).send(userUpdated);
 
-            resUpdated.should.have.status(401);
+            resUpdated.should.have.status(400);
         });
 
         it("Shouldn't update the user with wrong fields", async () => {

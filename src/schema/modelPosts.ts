@@ -1,23 +1,18 @@
 import { ObjectId } from "mongodb";
 
-export interface Validator {
-	authorId: ObjectId,
-	validate: boolean
-}
-
 export interface Posts {
 	_id?: ObjectId,
-	authors: [ObjectId],
+	authors: ObjectId[],
 	title: string,
 	body: string,
 	timestamp?: Date,
 	visible?: boolean,
-	validators?: Validator[]
+	validators?: ObjectId[]
 };
 
 export const PostsValidator = {
 	bsonType: "object",
-	required: ["authors", "title", "body", "visible"],
+	required: ["authors", "title", "body", "timestamp"],
 	additionalProperties: false,
 	properties: {
 		_id: { bsonType: "objectId" },
@@ -38,27 +33,17 @@ export const PostsValidator = {
 			bsonType: "string",
 			description: "must be a string and is required"
 		},
-		visible: {
-			bsonType: "bool",
-			description: "must be a boolean and is required"
-		},
 		validators: {
 			bsonType: "array",
-			description: "must be an array of objects containing an authorID (objectId) and a validate property (string)",
+			description: "must be an array of ObjectIds",
 			items: {
-				bsonType: "object",
-				additionalProperties: false,
-				properties: {
-					authorId: {
-						bsonType: "objectId",
-						description: "must be a string",
-					},
-					validate: {
-						bsonType: "bool",
-						description: "must be a boolean",
-					}
-				}
-			}
+				bsonType: "objectId"
+			},
+			uniqueItems: true
+		},
+		timestamp: {
+			bsonType: "date",
+			description: "must be a date that indicates the creation of the document. Is required"
 		}
 	}
 };

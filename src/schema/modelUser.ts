@@ -8,6 +8,7 @@ export interface UserCredentials {
     pseudo: string,
     password: string
 }
+
 export class User {
     constructor(
         public _id: ObjectId,
@@ -37,7 +38,7 @@ export class User {
     public static DBValidator() {
         return {
             bsonType: "object",
-            required: ["pseudo", "email", "password"],
+            required: ["pseudo", "email", "password", "timestamp"],
             additionalProperties: false,
             properties: {
                 _id: {
@@ -55,6 +56,10 @@ export class User {
                     bsonType: "string",
                     description: "must be a string and is required"
                 },
+                timestamp: {
+                    bsonType: "date",
+                    description: "must be a date indicating the creation of the document. Is required"
+                }
             }
         }
     }

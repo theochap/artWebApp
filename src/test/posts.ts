@@ -111,7 +111,7 @@ describe("Posts", () => {
 
 
             const resUpdated = await chai.request(app).put("/posts/").set("Authorization", authToken).send(updatedPost)
-            resUpdated.should.have.status(200)
+            resUpdated.should.have.status(201)
             resUpdated.body.should.have.property("result")
             resUpdated.body.result.should.have.property("matchedCount").eql(1)
             resUpdated.body.result.should.have.property("modifiedCount").eql(1)
@@ -129,7 +129,7 @@ describe("Posts", () => {
                 updatedFields, postId: resPost.body.result.insertedId
             }
 
-            const postId = resPost.body.result.insertedId
+            resPost.body.result.insertedId
 
             const resUpdated = await chai.request(app).put("/posts/").set("Authorization", authToken).send(updatedPost)
             resUpdated.should.have.status(400)
@@ -173,5 +173,36 @@ describe("Posts", () => {
         })
 
     })
+
+    describe("/POST /posts/validate/", async () => {
+        it("Should validate a post when a user posts a request", async () => {
+            const newTestUser = { email: "test2@gmail.com", pseudo: "test2", password: "test2" }
+            const resCreate = await CreateTestUser(app, newTestUser)
+            const newTestUserId: ObjectId = resCreate.body.id
+
+            const testPost: PostSchema = {
+                title: "Hello !",
+                body: "This is a test",
+                authors: [authId, newTestUserId]
+            };
+
+            const resPost = await CreateTestPost(app, testUser, testPost)
+            resPost.should.have.status(201)
+            resPost.body.insertedPost.should.have.property("validators")
+            resPost.body.insertedPost.validators.should.have.a.lengthOf(1)
+
+            const postId = resPost.body.result.insertedId
+
+            let validatePost = await chai.request(app).post("/posts/validate").set("Authorization", authToken).send({ postId })
+            validatePost.should.have.status(304)
+
+            const resLogin = await LoginTestUser(app, newTestUser)
+
+            validatePost = await chai.request(app).post("/posts/validate").set("Authorization", "Bearer " + resLogin.body.token).send({ postId })
+            validatePost.should.have.status(201)
+
+        })
+    })
+
 
 })

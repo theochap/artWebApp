@@ -40,6 +40,7 @@ export class User {
 			email: email,
 			pseudo: pseudo,
 			password: passwordHash.generate(password),
+			timestamp: new Date()
 		};
 
 		// verify that a user already exists
@@ -73,7 +74,7 @@ export class User {
 		try {
 			// Verify that the user exists
 
-			const findUserDoc = await DBVars.users.findOne({ email: email });
+			const findUserDoc = await DBVars.users.findOne<UserSchema>({ email: email });
 
 			const findUser = new UserSchema(findUserDoc._id, findUserDoc.pseudo, findUserDoc.email, findUserDoc.password);
 
@@ -155,7 +156,7 @@ export class User {
 		}
 
 		try {
-			const userData = (DBVars.users.find(reqParams, { projection: { _id: 1, pseudo: 1, email: 1, lastPosts: 1, }, }));
+			const userData = (DBVars.users.find(reqParams, { projection: { _id: 1, pseudo: 1, email: 1, lastPosts: 1, timestamp: 1 }, }));
 			const returnedData = await userData.toArray();
 			return res.status(200)
 				.json({
@@ -175,60 +176,48 @@ export class User {
 	static async updateUserById(req: Request, res: Response) {
 		const id: ObjectId = req.authData._id;
 
-		let updatedValues = {};
-		Object.keys(req.body).forEach((field) => {
-			if (field == "password") {
-				updatedValues["password"] =
-					passwordHash.generate(
-						req.body.password
-					);
-			} else if (field == "_id") {
-				return res
-					.status(401)
-					.json({
-						status: "Error 401 : You're not authorized to change a user ID",
-					});
-			} else {
-				updatedValues[field] = req.body[field];
-			}
-		});
+		let updatedValues: UserSchema = req.body;
+		updatedValues.password = "password" in req.body ? passwordHash.generate(req.body.password) : null
 
-		if (updatedValues) {
-			return DBVars.users.updateOne(
+		try {
+
+			const result = await DBVars.users.updateOne(
 				{ _id: id },
 				{ $set: updatedValues }
 			)
-				.then((result) => {
-					if (result.matchedCount == 0) {
-						return res.status(404).json({
-							status: "Error 404: No matched users",
-							result
-						})
-					} else if (result.modifiedCount == 0) {
-						return res.status(304).json({
-							status: "Status 304: Ressource not modified"
-						})
-					}
-					let userData =
-						"http://" + burl + "/users/" + id;
-					result["links"] = {
-						href: userData,
-						method: "GET",
-						rel: "data",
-					};
-					return res.status(201).json({
-						status: "Status 201 : Ressource successfully created",
-						result,
-					});
+
+			if (result.matchedCount == 0) {
+				return res.status(404).json({
+					status: "Error 404: No matched users",
+					result
 				})
-				.catch((err) =>
-					res
-						.status(400)
-						.json({
-							status: "Error 400 : Bad Request",
-							error: err,
-						})
-				);
+			} else if (result.modifiedCount == 0) {
+				return res.status(304).json({
+					status: "Status 304: Ressource not modified"
+				})
+			}
+
+			let userData =
+				"http://" + burl + "/users/" + id;
+
+			return res.status(201).json({
+				result,
+				links: {
+					href: userData,
+					method: "GET",
+					rel: "data",
+				},
+			});
+		}
+		catch (err) {
+			return res
+				.status(400)
+				.json({
+					status: "Error 400 : Bad Request",
+					error: err,
+				})
+
 		}
 	}
 }
+
