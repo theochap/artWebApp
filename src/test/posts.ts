@@ -31,7 +31,7 @@ var testPost: PostSchema = {
     authors: [authId]
 };
 
-async function CreateTestPost(app: Application, user: UserCredentials, post: PostSchema): Response {
+export async function CreateTestPost(app: Application, user: UserCredentials, post: PostSchema): Response {
     const resLogin = await LoginTestUser(app, user);
 
     authToken = "Bearer " + resLogin.body.token;

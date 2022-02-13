@@ -1,7 +1,7 @@
 // Set the node environment variable to test
 process.env.NODE_ENV = "test";
 
-import { User as UserSchema } from "../schema/modelUser";
+import { User as UserSchema, UserCredentials } from "../schema/modelUser";
 import { ConnectToDatabase, DBVars } from '../services/database.service';
 import chai from "chai";
 import chaiHttp from "chai-http";
@@ -10,10 +10,18 @@ import jwt = require("jwt-simple");
 import { Request, Response, Application } from "express";
 import config from "config";
 import { before } from "mocha";
+import { Posts } from "../schema/modelPosts";
+import { CreateTestPost } from "./posts";
 
 let should = chai.should();
 
 chai.use(chaiHttp);
+
+const testUser: UserCredentials = {
+    email: "test@gmail.com",
+    password: "test",
+    pseudo: "test"
+}
 
 export async function CreateTestUser(app: Application, user: { email: string, pseudo: string, password: string }) {
     const res = await chai.request(app).post("/users").send(user);
@@ -37,7 +45,10 @@ describe("Users", () => {
     // Before each test, connect to the database and empty the db
     before(() => ConnectToDatabase());
 
-    beforeEach(() => DBVars.users.deleteMany({}));
+    beforeEach(async () => {
+        await DBVars.users.deleteMany({})
+        await DBVars.posts.deleteMany({})
+    });
 
     // Test the GET route to verify that the database was well emptied
     describe("/GET users void", () => {
@@ -93,27 +104,18 @@ describe("Users", () => {
             });
         });
         it("Should POST a correct user otherwise", done => {
-            let user = {
-                email: "test@gmail.com",
-                pseudo: "test",
-                password: "test"
-            }
-            CreateTestUser(app, user)
+            CreateTestUser(app, testUser)
             done()
         });
         it("Should not be able to POST the same user another time", done => {
-            let user = {
-                email: "test@gmail.com",
-                pseudo: "test",
-                password: "test"
-            }
-            chai.request(app).post("/users").send(user).end((_, res) => {
+
+            chai.request(app).post("/users").send(testUser).end((_, res) => {
                 res.should.have.status(201);
                 res.body.should.have.property("id");
                 res.body.should.have.property("status").eql("201 Success : User created")
             });
 
-            chai.request(app).post("/users").send(user).end((_, res) => {
+            chai.request(app).post("/users").send(testUser).end((_, res) => {
                 res.should.have.status(400);
                 res.body.should.have.property("error");
                 res.body.should.have.property("status").eql("Error 400: Impossible to create a new user");
@@ -127,12 +129,8 @@ describe("Users", () => {
     // Test user getter
     describe("/GET /users/", () => {
         it("Should be able to retrieve the user by id correctly", async () => {
-            const user = {
-                email: "test@gmail.com",
-                password: "test",
-                pseudo: "test"
-            }
-            let userCreated = await CreateTestUser(app, user);
+
+            let userCreated = await CreateTestUser(app, testUser);
 
             let resGet = await chai.request(app).get("/users/").query({ _id: userCreated.body.id })
             resGet.should.have.status(200)
@@ -142,21 +140,17 @@ describe("Users", () => {
             resGet.body.returnedData[0].should.have.property('pseudo').eql("test")
         });
         it("Should be able to retrieve the user by another property correctly", async () => {
-            const user = {
-                email: "test@gmail.com",
-                password: "test",
-                pseudo: "test"
-            }
-            let userCreated = await CreateTestUser(app, user);
 
-            let resGet = await chai.request(app).get("/users/").query({ email: user.email })
+            let userCreated = await CreateTestUser(app, testUser);
+
+            let resGet = await chai.request(app).get("/users/").query({ email: testUser.email })
             resGet.should.have.status(200)
             resGet.body.returnedData.should.be.a("array");
             resGet.body.returnedData.should.have.lengthOf(1)
             resGet.body.returnedData[0].should.have.property('email').eql("test@gmail.com")
             resGet.body.returnedData[0].should.have.property('pseudo').eql("test")
 
-            resGet = await chai.request(app).get("/users/").query({ pseudo: user.pseudo })
+            resGet = await chai.request(app).get("/users/").query({ pseudo: testUser.pseudo })
             resGet.should.have.status(200)
             resGet.body.returnedData.should.be.a("array");
             resGet.body.returnedData.should.have.lengthOf(1)
@@ -166,12 +160,8 @@ describe("Users", () => {
         })
 
         it("Should fail otherwise", async () => {
-            const user = {
-                email: "test@gmail.com",
-                password: "test",
-                pseudo: "test"
-            }
-            let userCreated = await CreateTestUser(app, user);
+
+            let userCreated = await CreateTestUser(app, testUser);
 
             let resGet = await chai.request(app).get("/users/").query({ email: "falsemail" })
             resGet.should.have.status(200)
@@ -186,18 +176,13 @@ describe("Users", () => {
     describe("/POST /users/login", () => {
 
         it("Should be able to login when the access credentials are well specified", async () => {
-            let userDefine = {
-                email: "test@gmail.com",
-                password: "test",
-                pseudo: "test"
-            }
 
             let userLogin = {
                 email: "test@gmail.com",
                 password: "test"
             }
 
-            const PostRes = await CreateTestUser(app, userDefine);
+            const PostRes = await CreateTestUser(app, testUser);
 
             const LoginRes = await chai.request(app).post("/users/login").send(userLogin);
 
@@ -253,13 +238,8 @@ describe("Users", () => {
     // Test authentification
     describe("/GET /users/auth", () => {
         it("Should execute correctly if the good token is provided", async () => {
-            const user = {
-                email: "test@gmail.com",
-                password: "test",
-                pseudo: "test"
-            }
-            CreateTestUser(app, user);
-            const resLogin = await LoginTestUser(app, user);
+            CreateTestUser(app, testUser);
+            const resLogin = await LoginTestUser(app, testUser);
             const resAuth = await chai.request(app).get("/users/auth").set("Authorization", "Bearer " + resLogin.body.token);
             resAuth.should.have.status(203);
         });
@@ -273,20 +253,15 @@ describe("Users", () => {
     // Test update route
     describe("/PUT /users/", () => {
         it("Should be able to update the data of a single user", async () => {
-            const user = {
-                email: "test@gmail.com",
-                password: "test",
-                pseudo: "test"
-            };
 
-            const userUpdated = {
+            const userUpdated: UserCredentials = {
                 email: "newTest@gmail.com",
                 password: "newTest",
                 pseudo: "newTest",
             };
 
-            CreateTestUser(app, user);
-            const resLogin = await LoginTestUser(app, user);
+            CreateTestUser(app, testUser);
+            const resLogin = await LoginTestUser(app, testUser);
             const resUpdated = await chai.request(app).put("/users/")
                 .set("Authorization", "Bearer " + resLogin.body.token).send(userUpdated);
 
@@ -297,18 +272,13 @@ describe("Users", () => {
         });
 
         it("Shouldn't update the user if one tries to update the id", async () => {
-            const user = {
-                email: "test@gmail.com",
-                password: "test",
-                pseudo: "test"
-            };
 
             const userUpdated = {
                 _id: "12345"
             };
 
-            CreateTestUser(app, user);
-            const resLogin = await LoginTestUser(app, user);
+            CreateTestUser(app, testUser);
+            const resLogin = await LoginTestUser(app, testUser);
             const resUpdated = await chai.request(app).put("/users/")
                 .set("Authorization", "Bearer " + resLogin.body.token).send(userUpdated);
 
@@ -316,18 +286,13 @@ describe("Users", () => {
         });
 
         it("Shouldn't update the user with wrong fields", async () => {
-            const user = {
-                email: "test@gmail.com",
-                password: "test",
-                pseudo: "test"
-            };
 
             const userUpdated = {
                 wrongField: "12345"
             };
 
-            CreateTestUser(app, user);
-            const resLogin = await LoginTestUser(app, user);
+            CreateTestUser(app, testUser);
+            const resLogin = await LoginTestUser(app, testUser);
             const resUpdated = await chai.request(app).put("/users/")
                 .set("Authorization", "Bearer " + resLogin.body.token).send(userUpdated);
 
@@ -338,6 +303,61 @@ describe("Users", () => {
 
 
     });
+
+    describe("/DELETE /users/", () => {
+        let resLogin: Response
+        let resCreatePost1: Response
+        let resCreatePost2: Response
+
+        beforeEach(async () => {
+            const testUser2: UserCredentials = {
+                email: "test2@gmail.com",
+                password: "test2",
+                pseudo: "test2",
+            }
+
+            const resCreateUser1 = await CreateTestUser(app, testUser);
+
+            const resCreateUser2 = await CreateTestUser(app, testUser2)
+
+            const idUser1 = resCreateUser1.body.id
+            const idUser2 = resCreateUser2.body.id
+
+            resLogin = await LoginTestUser(app, testUser)
+
+            const testPost1: Posts = {
+                title: "Hello",
+                body: "Hello",
+                authors: [idUser1, idUser2]
+            }
+            const testPost2: Posts = {
+                title: "Hello",
+                body: "Hello",
+                authors: [idUser1]
+            }
+
+            resCreatePost1 = await CreateTestPost(app, testUser, testPost1)
+            resCreatePost2 = await CreateTestPost(app, testUser, testPost2)
+
+        })
+
+        it("Should only delete the user if deletePosts is not defined", async () => {
+            const resDelete = await chai.request(app).delete("/users/").set("Authorization", "Bearer " + resLogin.body.token)
+            resDelete.should.have.status(200)
+
+            const resFind = await chai.request(app).get("/posts/").query({})
+            resFind.body.result.should.have.lengthOf(2)
+        })
+
+        it("Should also delete the posts created by the user, and update the others when deletePost is set to one", async () => {
+            const resDelete = await chai.request(app).delete("/users/").set("Authorization", "Bearer " + resLogin.body.token).send({ deletePosts: 1 })
+            console.log(resDelete.error)
+            resDelete.should.have.status(200)
+
+            const resFind = await chai.request(app).get("/posts/").query({})
+            resFind.body.result.should.have.lengthOf(1)
+        })
+    })
 
 
 });

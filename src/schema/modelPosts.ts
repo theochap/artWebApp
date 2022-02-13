@@ -1,14 +1,20 @@
 import { ObjectId } from "mongodb";
 
+export interface UserPostData {
+	_id: ObjectId,
+	pseudo: string
+}
+
 export interface Posts {
 	_id?: ObjectId,
-	authors: ObjectId[],
+	authors: UserPostData[] | ObjectId[],
 	title: string,
 	body: string,
 	timestamp?: Date,
 	visible?: boolean,
 	validators?: ObjectId[]
 };
+
 
 export const PostsValidator = {
 	bsonType: "object",
@@ -23,8 +29,20 @@ export const PostsValidator = {
 		authors: {
 			bsonType: "array",
 			items: {
-				bsonType: "objectId",
-				description: "should be an objectId indicating the author objectId"
+				bsonType: "object",
+				required: ["_id", "pseudo"],
+				additionalProperties: false,
+				properties: {
+					_id: {
+						bsonType: "objectId",
+						description: "should be an objectId indicating the author objectId"
+					},
+					pseudo: {
+						bsonType: "string",
+						description: "should be a string containing the author pseudo"
+					}
+				},
+				minItems: 1
 			},
 			uniqueItems: true,
 			description: "must be an array of unique objectIds and is required"

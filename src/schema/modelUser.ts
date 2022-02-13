@@ -15,13 +15,6 @@ export class User {
         public pseudo: string,
         public email: string,
         public password?: string,
-        public lastPosts?: [{
-            id: string,
-            authors: ObjectId[],
-            title: string
-            body: string,
-            timestamp: Date,
-        }],
         public createdAt?: Date,) {
 
     }

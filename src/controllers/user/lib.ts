@@ -8,7 +8,7 @@ const jwt = require("jsonwebtoken");
 const burl = "localhost:8080";
 
 export class User {
-	static async authTest(req: Request, res: Response) {
+	static async authTest(req: Request, res: Response): Response {
 		try {
 			if (req.authData) {
 				return res.status(203).json({ status: "Status 203: Access Authorized", data: req.authData });
@@ -24,7 +24,7 @@ export class User {
 		}
 	}
 
-	static async signup(req: Request, res: Response) {
+	static async signup(req: Request, res: Response): Response {
 		const { password, pseudo, email }: { password: string, pseudo: string, email: string } = req.body;
 
 		if (!email || !password || !pseudo) {
@@ -64,7 +64,7 @@ export class User {
 
 	}
 
-	static async login(req: Request, res: Response) {
+	static async login(req: Request, res: Response): Response {
 		const { password, email }: { password: string, email: string } = req.body;
 		if (!email || !password) {
 			return res.status(400).json({
@@ -95,25 +95,21 @@ export class User {
 		}
 	}
 
-	static async delUser(req: Request, res: Response) {
+	static async delUser(req: Request, res: Response): Response {
 		const id: ObjectId = req.authData._id;
-		const deletePosts = req.body.deletePosts;
 
 		try {
-			const delUser = await DBVars.users.deleteOne({ _id: id });
+			if ("deletePosts" in req.body && req.body.deletePosts == 1) {
+				const delPosts = await DBVars.posts.deleteMany({ "authors._id": id, authors: { $size: 1 } }, { retryWrites: true });
 
-			if (delUser.deletedCount == 0) {
-				return res.status(404).json({
-					status: "Error 404: the user to delete has not been found"
-				});
+				if (delPosts.acknowledged) {
+					const delUser = await DBVars.users.deleteOne({ _id: id });
 
-			} else {
-				if (deletePosts) {
-					const delPosts = await DBVars.posts.deleteMany({ $and: [{ authors: id }, { authors: { $size: 1 } }] }, { retryWrites: true });
-					const updatedPosts = await DBVars.posts.updateMany(
-						{ $and: [{ authors: id }, { authors: { $size: { $gt: 1 } } }] },
-						{ authors: { $pull: id } });
-
+					if (delUser.acknowledged && delUser.deletedCount == 0) {
+						return res.status(404).json({
+							error: "Error 404: the user to delete has not been found"
+						});
+					}
 
 					return res
 						.status(200)
@@ -124,29 +120,39 @@ export class User {
 						});
 
 				} else {
-					return res
-						.status(200)
-						.json({
-							status: "Status 200: User deleted successfully",
-							delUser,
-						});
+					return res.status(500).json({ error: "Error 500: internal server error" })
 				}
 
-			}
 
+
+			} else {
+				const delUser = await DBVars.users.deleteOne({ _id: id });
+
+				if (delUser.deletedCount == 0) {
+					return res.status(404).json({
+						status: "Error 404: the user to delete has not been found"
+					});
+				}
+
+				return res
+					.status(200)
+					.json({
+						status: "Status 200: User deleted successfully",
+						delUser,
+					});
+			}
 
 		} catch (err) {
 
 			return res
 				.status(400)
 				.json({
-					status: "Error 500: internal server error",
-					err: err,
+					error: err,
 				})
 		}
 	}
 
-	static async get(req: Request, res: Response) {
+	static async get(req: Request, res: Response): Response {
 
 		const reqParams = req.query;
 
@@ -173,7 +179,7 @@ export class User {
 		}
 	}
 
-	static async updateUserById(req: Request, res: Response) {
+	static async updateUserById(req: Request, res: Response): Response {
 		const id: ObjectId = req.authData._id;
 
 		let updatedValues: UserSchema = req.body;

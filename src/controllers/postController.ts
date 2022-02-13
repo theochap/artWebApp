@@ -9,5 +9,4 @@ export function PrivateWallMiddleware(app) {
 	app.post("/validate", Posts.validate);
 	app.delete("/", Posts.del);
 	app.put("/", Posts.put);
-	app.patch("/", Posts.updatePosts);
 }
