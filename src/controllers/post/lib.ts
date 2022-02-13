@@ -7,9 +7,8 @@ import { AuthData, Error } from "../common/routesTypes.js";
 import HTTP from "../common/errorCodes.js";
 var LIMIT_CONST = 15;
 
-export class Posts {
-
-	static async add(
+export namespace Posts {
+	export async function add(
 		req: Request<AuthData, never, { title: string, body: string, authors: string[] }, never>,
 		res: Response<InsertOneResult | Error>
 	) {
@@ -55,7 +54,7 @@ export class Posts {
 
 	}
 
-	static async validate(
+	export async function validate(
 		req: Request<AuthData, never, { postId: string }, never>,
 		res: Response<UpdateResult | Error>) {
 
@@ -82,7 +81,7 @@ export class Posts {
 
 	}
 
-	static async put(
+	export async function put(
 		req: Request<AuthData, never, { postId: string, updatedFields: Partial<PostSchema> }, never>,
 		res: Response<UpdateResult | Error>) {
 
@@ -107,7 +106,7 @@ export class Posts {
 
 	}
 
-	static async get(
+	export async function get(
 		req: Request<never, never, never, Partial<PostSchema>>,
 		res: Response<PostSchema[] | Error>) {
 		try {
@@ -130,7 +129,7 @@ export class Posts {
 		}
 	}
 
-	static async del(
+	export async function del(
 		req: Request<never, never, { _id: string }, never>,
 		res: Response<DeleteResult | Error>) {
 		try {

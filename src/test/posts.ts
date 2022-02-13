@@ -1,31 +1,24 @@
 // Set the node environment variable to test
 process.env.NODE_ENV = "test";
 
-import { User as UserSchema, UserCredentials } from "../schema/modelUser";
+import { UserCredentials } from "../schema/modelUser";
 import { Posts as PostSchema } from "../schema/modelPosts";
 import { ConnectToDatabase, DBVars } from '../services/database.service';
 import chai from "chai";
 import chaiHttp from "chai-http";
 import { app } from '../server';
-import jwt = require("jwt-simple");
-import { Request, Response, Application } from "express";
-import config from "config";
+import { Application } from "express";
 import { before } from "mocha";
 import { CreateTestUser, LoginTestUser } from "./user";
 import { ObjectId } from "mongodb";
+import { testUser } from "./user"
 
 let should = chai.should();
 
 var authToken: string
 var authId: ObjectId
 
-var testUser: UserCredentials = {
-    email: "test@gmail.com",
-    pseudo: "test",
-    password: "test"
-}
-
-var testPost: PostSchema = {
+export const testPost: PostSchema = {
     title: "Hello !",
     body: "This is a test",
     authors: [authId]
@@ -46,7 +39,7 @@ chai.use(chaiHttp);
 
 describe("Posts", () => {
     // connect to the database
-    before(() => ConnectToDatabase());
+    before(async () => { await ConnectToDatabase() });
 
     // wipe out the databases      
     beforeEach(async () => {

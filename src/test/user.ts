@@ -19,7 +19,7 @@ let should = chai.should();
 
 chai.use(chaiHttp);
 
-const testUser: UserCredentials = {
+export const testUser: UserCredentials = {
     email: "test@gmail.com",
     password: "test",
     pseudo: "test"
@@ -44,7 +44,7 @@ export async function LoginTestUser(app: Application, user: { email: string, pas
 describe("Users", () => {
 
     // Before each test, connect to the database and empty the db
-    before(() => ConnectToDatabase());
+    before(async () => { await ConnectToDatabase() });
 
     beforeEach(async () => {
         await DBVars.users.deleteMany({})
@@ -335,7 +335,6 @@ describe("Users", () => {
 
         it("Should also delete the posts created by the user, and update the others when deletePost is set to one", async () => {
             const resDelete = await chai.request(app).delete("/users/").set("Authorization", "Bearer " + resLogin.body.token).send({ deletePosts: 1 })
-            console.log(resDelete.error)
             resDelete.should.have.status(202)
 
             const resFind = await chai.request(app).get("/posts/").query({})

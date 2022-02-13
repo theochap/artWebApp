@@ -9,8 +9,8 @@ import HTTP from "../common/errorCodes";
 const jwt = require("jsonwebtoken");
 const burl = "localhost:8080";
 
-export class User {
-	static async authTest(
+export namespace User {
+	export async function authTest(
 		req: Request<AuthData, never, never, never>,
 		res: Response<{ _id: ObjectId } | Error>) {
 		try {
@@ -28,7 +28,7 @@ export class User {
 		}
 	}
 
-	static async signup(
+	export async function signup(
 		req: Request<never, never, UserCredentials, never>,
 		res: Response<InsertOneResult | Error>) {
 
@@ -68,7 +68,7 @@ export class User {
 
 	}
 
-	static async login(
+	export async function login(
 		req: Request<never, never, { password: string, email: string }, never>,
 		res: Response<{ token: string, id: ObjectId } | Error>) {
 		const { password, email }: { password: string, email: string } = req.body
@@ -100,7 +100,7 @@ export class User {
 		}
 	}
 
-	static async delUser(
+	export async function del(
 		req: Request<AuthData, never, { deletePosts: number }, never>,
 		res: Response<DeleteResult | { deletedUser: DeleteResult, deletedPosts: DeleteResult } | Error>) {
 
@@ -158,7 +158,7 @@ export class User {
 		}
 	}
 
-	static async get(
+	export async function get(
 		req: Request<any, any, any, Partial<UserSchema>>,
 		res: Response<UserSchema[] | Error>) {
 
@@ -185,7 +185,7 @@ export class User {
 		}
 	}
 
-	static async updateUserById(
+	export async function put(
 		req: Request<AuthData, never, Partial<UserSchema>, never>,
 		res: Response<UpdateResult | Error>) {
 		const id: ObjectId = req.authData._id;

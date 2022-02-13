@@ -5,6 +5,7 @@ import express from "express";
 import { PublicUserMiddleware, PrivateUserMiddleware } from "./controllers/user/userController"
 import { Authentificate } from './controllers/common/userAuthentification';
 import { PublicWallMiddleware, PrivateWallMiddleware } from './controllers/post/postController';
+import { PublicCommentsMiddleware, PrivateCommentsMiddleware } from './controllers/comments/commentsController';
 import { ConnectToDatabase } from './services/database.service';
 import config from "config";
 import morgan from "morgan";
@@ -43,7 +44,7 @@ ConnectToDatabase().then(() => {
 
 	const privateUserRouter = express.Router();
 	PrivateUserMiddleware(privateUserRouter);
-	app.use("/users/", Authentificate.parseToken, Authentificate.authMiddleware, privateUserRouter);
+	app.use("/users", Authentificate.parseToken, Authentificate.authMiddleware, privateUserRouter);
 
 	const publicWallRouter = express.Router();
 	PublicWallMiddleware(publicWallRouter);
@@ -51,8 +52,15 @@ ConnectToDatabase().then(() => {
 
 	const privateWallRouter = express.Router();
 	PrivateWallMiddleware(privateWallRouter);
-	app.use("/posts/", Authentificate.parseToken, Authentificate.authMiddleware, privateWallRouter);
+	app.use("/posts", Authentificate.parseToken, Authentificate.authMiddleware, privateWallRouter);
 
+	const publicCommentsRouter = express.Router();
+	PublicCommentsMiddleware(publicCommentsRouter);
+	app.use("/comments", publicCommentsRouter);
+
+	const privateCommentsRouter = express.Router();
+	PrivateCommentsMiddleware(privateCommentsRouter);
+	app.use("/comments", Authentificate.parseToken, Authentificate.authMiddleware, privateCommentsRouter);
 
 	app.get("/", (req, res) => { res.status(200).json({ text: "Status 200: Success" }) });
 

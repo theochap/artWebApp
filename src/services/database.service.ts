@@ -4,9 +4,10 @@ import config from "config";
 import { User } from "../schema/modelUser";
 import { PostsValidator } from "../schema/modelPosts";
 import { Posts } from "../schema/modelPosts";
+import { CommentsValidator } from "../schema/modelComments";
 
 // Global Variables
-export const DBVars: { users?: mongoDB.Collection, posts?: mongoDB.Collection, client?: mongoDB.MongoClient } = {}
+export var DBVars: { users?: mongoDB.Collection, posts?: mongoDB.Collection, comments?: mongoDB.Collection, client?: mongoDB.MongoClient } = {}
 
 // Initialize Connection
 export async function ConnectToDatabase() {
@@ -24,11 +25,22 @@ export async function ConnectToDatabase() {
     const usersCollectionName: string = config.get("collections.users")
     const usersCollection = db.collection(usersCollectionName);
 
+    const commentsCollectionName: string = config.get("collections.comments")
+    const commentsCollection = db.collection(commentsCollectionName);
+
 
     await db.command({
         "collMod": postsCollectionName,
         "validator": {
             $jsonSchema: PostsValidator,
+        },
+        "validationLevel": "moderate"
+    });
+
+    await db.command({
+        "collMod": commentsCollectionName,
+        "validator": {
+            $jsonSchema: CommentsValidator,
         },
         "validationLevel": "moderate"
     });
@@ -45,6 +57,7 @@ export async function ConnectToDatabase() {
 
     DBVars.users = usersCollection;
     DBVars.posts = postsCollection;
+    DBVars.comments = commentsCollection;
     DBVars.client = Client;
 
 

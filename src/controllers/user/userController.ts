@@ -10,6 +10,6 @@ export function PublicUserMiddleware(app) {
 
 export function PrivateUserMiddleware(app) {
 	app.get("/auth", User.authTest);
-	app.delete("/", User.delUser);
-	app.put("/", User.updateUserById);
+	app.delete("/", User.del);
+	app.put("/", User.put);
 }
