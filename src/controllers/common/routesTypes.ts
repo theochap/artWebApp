@@ -13,4 +13,4 @@ declare global {
 
 export type Error = { error: string | Object }
 
-
+export type AuthData = { authData: { _id: ObjectId } }

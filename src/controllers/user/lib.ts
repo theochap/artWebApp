@@ -1,16 +1,18 @@
 import { DBVars } from "../../services/database.service";
 import { Request, Response } from "express";
-import { User as UserSchema } from "../../schema/modelUser";
+import { User as UserSchema, UserCredentials } from "../../schema/modelUser";
 import { DeleteResult, InsertOneResult, ObjectId, UpdateResult } from "mongodb";
 import passwordHash = require("password-hash");
 import { fail } from "assert";
-import { Error } from "../common/routesTypes";
+import { AuthData, Error } from "../common/routesTypes";
 import HTTP from "../common/errorCodes";
 const jwt = require("jsonwebtoken");
 const burl = "localhost:8080";
 
 export class User {
-	static async authTest(req: Request<{ authData: { _id: ObjectId } }>, res: Response<{ _id: ObjectId } | Error>) {
+	static async authTest(
+		req: Request<AuthData, never, never, never>,
+		res: Response<{ _id: ObjectId } | Error>) {
 		try {
 			if (req.authData) {
 				return res.status(HTTP.ACCEPTED).json(req.authData);
@@ -26,7 +28,10 @@ export class User {
 		}
 	}
 
-	static async signup(req: Request, res: Response<InsertOneResult | Error>) {
+	static async signup(
+		req: Request<never, never, UserCredentials, never>,
+		res: Response<InsertOneResult | Error>) {
+
 		const { password, pseudo, email }: { password: string, pseudo: string, email: string } = req.body;
 
 		if (!email || !password || !pseudo) {
@@ -63,13 +68,16 @@ export class User {
 
 	}
 
-	static async login(req: Request<any, any, { password: string, email: string }>, res: Response<{ token: string, id: ObjectId } | Error>) {
+	static async login(
+		req: Request<never, never, { password: string, email: string }, never>,
+		res: Response<{ token: string, id: ObjectId } | Error>) {
 		const { password, email }: { password: string, email: string } = req.body
 		if (!email || !password) {
 			return res.status(400).json({
 				error: "Error 400 : Invalid request",
 			});
 		}
+
 		try {
 			// Verify that the user exists
 
@@ -92,7 +100,10 @@ export class User {
 		}
 	}
 
-	static async delUser(req: Request, res: Response<DeleteResult | { deletedUser: DeleteResult, deletedPosts: DeleteResult } | Error>) {
+	static async delUser(
+		req: Request<AuthData, never, { deletePosts: number }, never>,
+		res: Response<DeleteResult | { deletedUser: DeleteResult, deletedPosts: DeleteResult } | Error>) {
+
 		const id: ObjectId = req.authData._id;
 
 		try {
@@ -147,7 +158,9 @@ export class User {
 		}
 	}
 
-	static async get(req: Request<any, any, any, Partial<UserSchema>>, res: Response<UserSchema[] | Error>) {
+	static async get(
+		req: Request<any, any, any, Partial<UserSchema>>,
+		res: Response<UserSchema[] | Error>) {
 
 		const reqParams: Partial<UserSchema> = req.query;
 
@@ -172,10 +185,12 @@ export class User {
 		}
 	}
 
-	static async updateUserById(req: Request<{ authData: { _id: ObjectId } }>, res: Response<UpdateResult | Error>) {
+	static async updateUserById(
+		req: Request<AuthData, never, Partial<UserSchema>, never>,
+		res: Response<UpdateResult | Error>) {
 		const id: ObjectId = req.authData._id;
 
-		let updatedValues: UserSchema = req.body;
+		let updatedValues: Partial<UserSchema> = req.body;
 		updatedValues.password = "password" in req.body ? passwordHash.generate(req.body.password) : null
 
 		try {

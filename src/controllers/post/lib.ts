@@ -3,13 +3,16 @@ import { User as UserSchema } from "../../schema/modelUser.js";
 import { Request, Response } from "express";
 import { DBVars } from "../../services/database.service.js";
 import { DeleteResult, InsertOneResult, ObjectId, UpdateResult } from 'mongodb';
-import { Error } from "../common/routesTypes.js";
+import { AuthData, Error } from "../common/routesTypes.js";
 import HTTP from "../common/errorCodes.js";
 var LIMIT_CONST = 15;
 
 export class Posts {
 
-	static async add(req: Request, res: Response<InsertOneResult | Error>) {
+	static async add(
+		req: Request<AuthData, never, { title: string, body: string, authors: string[] }, never>,
+		res: Response<InsertOneResult | Error>
+	) {
 
 		try {
 			const thisAuthor: ObjectId = req.authData._id;
@@ -52,9 +55,13 @@ export class Posts {
 
 	}
 
-	static async validate(req: Request, res: Response<UpdateResult | Error>) {
+	static async validate(
+		req: Request<AuthData, never, { postId: string }, never>,
+		res: Response<UpdateResult | Error>) {
+
 		const { postId: postIdStr } = req.body;
 		const postId = new ObjectId(postIdStr)
+
 		const thisAuthorId = req.authData._id;
 
 		try {
@@ -75,11 +82,12 @@ export class Posts {
 
 	}
 
-	static async put(req: Request, res: Response<UpdateResult | Error>) {
-		const authorId: ObjectId = req.authData._id;
+	static async put(
+		req: Request<AuthData, never, { postId: string, updatedFields: Partial<PostSchema> }, never>,
+		res: Response<UpdateResult | Error>) {
 
-		const postIdStr: string = req.body.postId;
-		const postId: ObjectId = new ObjectId(postIdStr);
+		const authorId: ObjectId = req.authData._id;
+		const postId: ObjectId = new ObjectId(req.body.postId);
 
 		const updatedValues: { title?: string, body?: string } = req.body.updatedFields;
 
@@ -99,12 +107,14 @@ export class Posts {
 
 	}
 
-	static async get(req: Request, res: Response<PostSchema[] | Error>) {
+	static async get(
+		req: Request<never, never, never, Partial<PostSchema>>,
+		res: Response<PostSchema[] | Error>) {
 		try {
 			const reqParams: Partial<PostSchema> = req.query
 
 			if (reqParams._id) {
-				reqParams._id = new ObjectId(req.query._id as string);
+				reqParams._id = new ObjectId(req.query._id);
 			}
 
 			const wallPosts = (DBVars.posts.find<PostSchema>(reqParams));
@@ -120,10 +130,11 @@ export class Posts {
 		}
 	}
 
-	static async del(req: Request, res: Response<DeleteResult | Error>) {
+	static async del(
+		req: Request<never, never, { _id: string }, never>,
+		res: Response<DeleteResult | Error>) {
 		try {
-			const idStr: string = (req.body._id);
-			const id: ObjectId = new ObjectId(idStr)
+			const id: ObjectId = new ObjectId(req.body._id);
 			const resDelete = await DBVars.posts.deleteOne({ _id: id, "authors._id": req.authData._id });
 
 			if (resDelete.deletedCount == 0) {
