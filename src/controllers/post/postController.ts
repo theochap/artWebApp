@@ -1,4 +1,4 @@
-import { Posts } from './post/lib.js';
+import { Posts } from './lib.js';
 
 export function PublicWallMiddleware(app) {
 	app.get("/", Posts.get)

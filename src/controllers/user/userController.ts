@@ -1,4 +1,4 @@
-import { User } from './user/lib';
+import { User } from './lib';
 
 export function PublicUserMiddleware(app) {
 	/* Routes and functions for the /users api

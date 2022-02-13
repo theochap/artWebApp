@@ -2,9 +2,9 @@
 //
 import cors = require('cors');
 import express from "express";
-import { PublicUserMiddleware, PrivateUserMiddleware } from "./controllers/userController"
-import { Authentificate } from './controllers/userAuthentification';
-import { PublicWallMiddleware, PrivateWallMiddleware } from './controllers/postController';
+import { PublicUserMiddleware, PrivateUserMiddleware } from "./controllers/user/userController"
+import { Authentificate } from './controllers/common/userAuthentification';
+import { PublicWallMiddleware, PrivateWallMiddleware } from './controllers/post/postController';
 import { ConnectToDatabase } from './services/database.service';
 import config from "config";
 import morgan from "morgan";

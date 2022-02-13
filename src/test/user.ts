@@ -7,11 +7,13 @@ import chai from "chai";
 import chaiHttp from "chai-http";
 import { app } from '../server';
 import jwt = require("jwt-simple");
-import { Request, Response, Application } from "express";
+import { Application } from "express";
 import config from "config";
 import { before } from "mocha";
 import { Posts } from "../schema/modelPosts";
 import { CreateTestPost } from "./posts";
+import { InsertOneResult } from "mongodb";
+import { Error } from "../controllers/common/routesTypes"
 
 let should = chai.should();
 
@@ -26,14 +28,13 @@ const testUser: UserCredentials = {
 export async function CreateTestUser(app: Application, user: { email: string, pseudo: string, password: string }) {
     const res = await chai.request(app).post("/users").send(user);
     res.should.have.status(201);
-    res.body.should.have.property("id");
-    res.body.should.have.property("status").eql("201 Success : User created");
+    res.body.should.have.property("insertedId");
     return res;
 }
 
 export async function LoginTestUser(app: Application, user: { email: string, password: string }) {
     const res = await chai.request(app).post("/users/login").send(user);
-    res.should.have.status(200);
+    res.should.have.status(202);
     res.body.should.have.property("token");
     return res
 }
@@ -56,8 +57,8 @@ describe("Users", () => {
             chai.request(app).get("/users").end((_, res) => {
                 res.should.have.status(200);
                 res.should.be.a("object");
-                (res.body.returnedData).should.be.a("array");
-                (res.body.returnedData).should.have.lengthOf(0);
+                res.body.should.be.a("array");
+                res.body.should.have.lengthOf(0);
                 done();
             });
         });
@@ -74,8 +75,6 @@ describe("Users", () => {
             }
             chai.request(app).post("/users").send(user).end((_, res) => {
                 res.should.have.status(400);
-                res.body.should.be.a("object");
-                res.body.status.should.be.eql("Error 400: Bad request");
                 done();
             });
         });
@@ -86,8 +85,6 @@ describe("Users", () => {
             }
             chai.request(app).post("/users").send(user).end((_, res) => {
                 res.should.have.status(400);
-                res.body.should.be.a("object");
-                res.body.status.should.be.eql("Error 400: Bad request");
                 done();
             });
         });
@@ -98,8 +95,6 @@ describe("Users", () => {
             }
             chai.request(app).post("/users").send(user).end((_, res) => {
                 res.should.have.status(400);
-                res.body.should.be.a("object");
-                res.body.status.should.be.eql("Error 400: Bad request");
                 done();
             });
         });
@@ -107,24 +102,17 @@ describe("Users", () => {
             CreateTestUser(app, testUser)
             done()
         });
-        it("Should not be able to POST the same user another time", done => {
 
-            chai.request(app).post("/users").send(testUser).end((_, res) => {
-                res.should.have.status(201);
-                res.body.should.have.property("id");
-                res.body.should.have.property("status").eql("201 Success : User created")
-            });
+        it("Should not be able to POST the same user another time", async () => {
 
-            chai.request(app).post("/users").send(testUser).end((_, res) => {
-                res.should.have.status(400);
-                res.body.should.have.property("error");
-                res.body.should.have.property("status").eql("Error 400: Impossible to create a new user");
-                done();
-            });
+            await CreateTestUser(app, testUser)
 
+            const res = await chai.request(app).post("/users").send(testUser)
+            res.should.have.status(400);
+            res.body.should.have.property("error");
         });
-
     });
+
 
     // Test user getter
     describe("/GET /users/", () => {
@@ -134,10 +122,10 @@ describe("Users", () => {
 
             let resGet = await chai.request(app).get("/users/").query({ _id: userCreated.body.id })
             resGet.should.have.status(200)
-            resGet.body.returnedData.should.be.a("array");
-            resGet.body.returnedData.should.have.lengthOf(1)
-            resGet.body.returnedData[0].should.have.property('email').eql("test@gmail.com")
-            resGet.body.returnedData[0].should.have.property('pseudo').eql("test")
+            resGet.body.should.be.a("array");
+            resGet.body.should.have.lengthOf(1)
+            resGet.body[0].should.have.property('email').eql("test@gmail.com")
+            resGet.body[0].should.have.property('pseudo').eql("test")
         });
         it("Should be able to retrieve the user by another property correctly", async () => {
 
@@ -145,17 +133,17 @@ describe("Users", () => {
 
             let resGet = await chai.request(app).get("/users/").query({ email: testUser.email })
             resGet.should.have.status(200)
-            resGet.body.returnedData.should.be.a("array");
-            resGet.body.returnedData.should.have.lengthOf(1)
-            resGet.body.returnedData[0].should.have.property('email').eql("test@gmail.com")
-            resGet.body.returnedData[0].should.have.property('pseudo').eql("test")
+            resGet.body.should.be.a("array");
+            resGet.body.should.have.lengthOf(1)
+            resGet.body[0].should.have.property('email').eql("test@gmail.com")
+            resGet.body[0].should.have.property('pseudo').eql("test")
 
             resGet = await chai.request(app).get("/users/").query({ pseudo: testUser.pseudo })
             resGet.should.have.status(200)
-            resGet.body.returnedData.should.be.a("array");
-            resGet.body.returnedData.should.have.lengthOf(1)
-            resGet.body.returnedData[0].should.have.property('email').eql("test@gmail.com")
-            resGet.body.returnedData[0].should.have.property('pseudo').eql("test")
+            resGet.body.should.be.a("array");
+            resGet.body.should.have.lengthOf(1)
+            resGet.body[0].should.have.property('email').eql("test@gmail.com")
+            resGet.body[0].should.have.property('pseudo').eql("test")
 
         })
 
@@ -165,8 +153,8 @@ describe("Users", () => {
 
             let resGet = await chai.request(app).get("/users/").query({ email: "falsemail" })
             resGet.should.have.status(200)
-            resGet.body.returnedData.should.be.a("array");
-            resGet.body.returnedData.should.have.lengthOf(0)
+            resGet.body.should.be.a("array");
+            resGet.body.should.have.lengthOf(0)
 
         });
     });
@@ -186,10 +174,10 @@ describe("Users", () => {
 
             const LoginRes = await chai.request(app).post("/users/login").send(userLogin);
 
-            LoginRes.should.have.status(200);
-            LoginRes.body.should.have.property("id").eql(PostRes.body.id);
+            LoginRes.should.have.status(202);
+            LoginRes.body.should.have.property("id").eql(PostRes.body.insertedId);
 
-            const data = { _id: PostRes.body.id };
+            const data = { _id: PostRes.body.insertedId };
             const token = jwt.encode(data, config.get("jwt.pass"));
 
             LoginRes.body.should.have.property("token").eql(token)
@@ -221,15 +209,12 @@ describe("Users", () => {
 
             let res1 = await chai.request(app).post("/users/login").send(user1);
             res1.should.have.status(404);
-            res1.body.should.have.property("status").eql("Error 404: Invalid credentials");
 
             let res2 = await chai.request(app).post("/users/login").send(user2);
             res2.should.have.status(404);
-            res1.body.should.have.property("status").eql("Error 404: Invalid credentials");
 
             let res3 = await chai.request(app).post("/users/login").send(user3);
             res3.should.have.status(400);
-            res3.body.should.have.property("status").eql("Error 400 : Invalid request");
 
         });
 
@@ -241,7 +226,7 @@ describe("Users", () => {
             CreateTestUser(app, testUser);
             const resLogin = await LoginTestUser(app, testUser);
             const resAuth = await chai.request(app).get("/users/auth").set("Authorization", "Bearer " + resLogin.body.token);
-            resAuth.should.have.status(203);
+            resAuth.should.have.status(202);
         });
         it("Should fail otherwise", async () => {
             const resAuth = await chai.request(app).get("/users/auth").set("Authorization", "Bearer ");
@@ -266,9 +251,8 @@ describe("Users", () => {
                 .set("Authorization", "Bearer " + resLogin.body.token).send(userUpdated);
 
             resUpdated.should.have.status(201);
-            resUpdated.body.should.have.property("result");
-            resUpdated.body.result.should.have.property("modifiedCount").eql(1);
-            resUpdated.body.result.should.have.property("matchedCount").eql(1);
+            resUpdated.body.should.have.property("modifiedCount").eql(1);
+            resUpdated.body.should.have.property("matchedCount").eql(1);
         });
 
         it("Shouldn't update the user if one tries to update the id", async () => {
@@ -305,9 +289,9 @@ describe("Users", () => {
     });
 
     describe("/DELETE /users/", () => {
-        let resLogin: Response
-        let resCreatePost1: Response
-        let resCreatePost2: Response
+        let resLogin
+        let resCreatePost1
+        let resCreatePost2
 
         beforeEach(async () => {
             const testUser2: UserCredentials = {
@@ -320,8 +304,8 @@ describe("Users", () => {
 
             const resCreateUser2 = await CreateTestUser(app, testUser2)
 
-            const idUser1 = resCreateUser1.body.id
-            const idUser2 = resCreateUser2.body.id
+            const idUser1 = resCreateUser1.body.insertedId
+            const idUser2 = resCreateUser2.body.insertedId
 
             resLogin = await LoginTestUser(app, testUser)
 
@@ -343,19 +327,19 @@ describe("Users", () => {
 
         it("Should only delete the user if deletePosts is not defined", async () => {
             const resDelete = await chai.request(app).delete("/users/").set("Authorization", "Bearer " + resLogin.body.token)
-            resDelete.should.have.status(200)
+            resDelete.should.have.status(202)
 
             const resFind = await chai.request(app).get("/posts/").query({})
-            resFind.body.result.should.have.lengthOf(2)
+            resFind.body.should.have.lengthOf(2)
         })
 
         it("Should also delete the posts created by the user, and update the others when deletePost is set to one", async () => {
             const resDelete = await chai.request(app).delete("/users/").set("Authorization", "Bearer " + resLogin.body.token).send({ deletePosts: 1 })
             console.log(resDelete.error)
-            resDelete.should.have.status(200)
+            resDelete.should.have.status(202)
 
             const resFind = await chai.request(app).get("/posts/").query({})
-            resFind.body.result.should.have.lengthOf(1)
+            resFind.body.should.have.lengthOf(1)
         })
     })
 

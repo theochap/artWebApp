@@ -1,10 +1,11 @@
 import config from "config";
 import { ObjectId } from "mongodb";
 const jwt = require("jsonwebtoken");
+import { Response, Request } from "express"
 
 export class Authentificate {
 
-    static async authMiddleware(req, res, next) {
+    static async authMiddleware(req: Request, res: Response, next) {
         const token: string = req.token;
 
         if (token) {
@@ -29,7 +30,7 @@ export class Authentificate {
 
     }
 
-    static async parseToken(req, res, next) {
+    static async parseToken(req: Request, res: Response, next) {
         const authorizationHeader = req.header("Authorization");
         if (typeof authorizationHeader !== "undefined" && authorizationHeader.startsWith("Bearer ")) {
             const token = authorizationHeader.substring(7, authorizationHeader.length);

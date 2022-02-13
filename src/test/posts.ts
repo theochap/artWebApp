@@ -31,7 +31,7 @@ var testPost: PostSchema = {
     authors: [authId]
 };
 
-export async function CreateTestPost(app: Application, user: UserCredentials, post: PostSchema): Response {
+export async function CreateTestPost(app: Application, user: UserCredentials, post: PostSchema) {
     const resLogin = await LoginTestUser(app, user);
 
     authToken = "Bearer " + resLogin.body.token;
@@ -54,7 +54,7 @@ describe("Posts", () => {
         await DBVars.posts.deleteMany({});
 
         let res = await CreateTestUser(app, testUser);
-        authId = res.body.id
+        authId = res.body.insertedId
         testPost.authors = [authId]
     });
 
@@ -88,12 +88,12 @@ describe("Posts", () => {
         it("Should return a correct post representation when queried", async () => {
             const resPost = await CreateTestPost(app, testUser, testPost)
 
-            const postId = resPost.body.result.insertedId
+            const postId = resPost.body.insertedId
 
             const resGet = await chai.request(app).get("/posts/").query({ _id: postId })
             resGet.should.have.status(200)
-            resGet.body.result.should.be.a('array')
-            resGet.body.result.should.have.lengthOf(1)
+            resGet.body.should.be.a('array')
+            resGet.body.should.have.lengthOf(1)
         })
 
     })
@@ -106,15 +106,14 @@ describe("Posts", () => {
                 updatedFields: {
                     title: "Hello world!",
                     body: "This is an update test",
-                }, postId: resPost.body.result.insertedId
+                }, postId: resPost.body.insertedId
             }
 
 
             const resUpdated = await chai.request(app).put("/posts/").set("Authorization", authToken).send(updatedPost)
             resUpdated.should.have.status(201)
-            resUpdated.body.should.have.property("result")
-            resUpdated.body.result.should.have.property("matchedCount").eql(1)
-            resUpdated.body.result.should.have.property("modifiedCount").eql(1)
+            resUpdated.body.should.have.property("matchedCount").eql(1)
+            resUpdated.body.should.have.property("modifiedCount").eql(1)
         })
 
         it("Should fail if wrong parameters are supplied (schema validation)", async () => {
@@ -126,10 +125,10 @@ describe("Posts", () => {
             }
 
             let updatedPost = {
-                updatedFields, postId: resPost.body.result.insertedId
+                updatedFields, postId: resPost.body.insertedId
             }
 
-            resPost.body.result.insertedId
+            resPost.body.insertedId
 
             const resUpdated = await chai.request(app).put("/posts/").set("Authorization", authToken).send(updatedPost)
             resUpdated.should.have.status(400)
@@ -146,7 +145,7 @@ describe("Posts", () => {
                 updatedFields: {
                     title: "Hello world!",
                     body: "This is an update test",
-                }, postId: resPost.body.result.insertedId
+                }, postId: resPost.body.insertedId
             }
 
             const resUpdated = await chai.request(app).put("/posts/").set("Authorization", "Bearer " + resLogin.body.token).send(updatedPost)
@@ -158,7 +157,7 @@ describe("Posts", () => {
         it("Should delete the post when the correct credential is provided", async () => {
             const resPost = await CreateTestPost(app, testUser, testPost)
 
-            const resDeleted = await chai.request(app).delete("/posts/").set("Authorization", authToken).send({ _id: resPost.body.result.insertedId })
+            const resDeleted = await chai.request(app).delete("/posts/").set("Authorization", authToken).send({ _id: resPost.body.insertedId })
             resDeleted.should.have.status(200)
         })
         it("Shouldn't delete the post if the user is not the author", async () => {
@@ -168,7 +167,7 @@ describe("Posts", () => {
             await CreateTestUser(app, newTestUser)
             const resLogin = await LoginTestUser(app, newTestUser)
 
-            const resDeleted = await chai.request(app).delete("/posts/").set("Authorization", "Bearer " + resLogin.body.token).send({ _id: resPost.body.result.insertedId })
+            const resDeleted = await chai.request(app).delete("/posts/").set("Authorization", "Bearer " + resLogin.body.token).send({ _id: resPost.body.insertedId })
             resDeleted.should.have.status(404)
         })
 
@@ -178,7 +177,7 @@ describe("Posts", () => {
         it("Should validate a post when a user posts a request", async () => {
             const newTestUser = { email: "test2@gmail.com", pseudo: "test2", password: "test2" }
             const resCreate = await CreateTestUser(app, newTestUser)
-            const newTestUserId: ObjectId = resCreate.body.id
+            const newTestUserId: ObjectId = resCreate.body.insertedId
 
             const testPost: PostSchema = {
                 title: "Hello !",
@@ -188,10 +187,13 @@ describe("Posts", () => {
 
             const resPost = await CreateTestPost(app, testUser, testPost)
             resPost.should.have.status(201)
-            resPost.body.insertedPost.should.have.property("validators")
-            resPost.body.insertedPost.validators.should.have.a.lengthOf(1)
 
-            const postId = resPost.body.result.insertedId
+            const postId = resPost.body.insertedId
+
+            const resGet = await chai.request(app).get("/posts/").query({ _id: postId })
+            resGet.body[0].should.have.property("validators")
+            resGet.body[0].validators.should.have.a.lengthOf(1)
+
 
             let validatePost = await chai.request(app).post("/posts/validate").set("Authorization", authToken).send({ postId })
             validatePost.should.have.status(304)

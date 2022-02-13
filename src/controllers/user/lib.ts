@@ -1,36 +1,38 @@
 import { DBVars } from "../../services/database.service";
 import { Request, Response } from "express";
 import { User as UserSchema } from "../../schema/modelUser";
-import { ObjectId } from "mongodb";
+import { DeleteResult, InsertOneResult, ObjectId, UpdateResult } from "mongodb";
 import passwordHash = require("password-hash");
 import { fail } from "assert";
+import { Error } from "../common/routesTypes";
+import HTTP from "../common/errorCodes";
 const jwt = require("jsonwebtoken");
 const burl = "localhost:8080";
 
 export class User {
-	static async authTest(req: Request, res: Response): Response {
+	static async authTest(req: Request<{ authData: { _id: ObjectId } }>, res: Response<{ _id: ObjectId } | Error>) {
 		try {
 			if (req.authData) {
-				return res.status(203).json({ status: "Status 203: Access Authorized", data: req.authData });
+				return res.status(HTTP.ACCEPTED).json(req.authData);
 			}
 			else {
-				return res.status(403)
+				return res.status(HTTP.UNAUTHORIZED)
 					.json({
-						status: "Error 403: Bad Request"
+						error: "Error 403: Bad Request"
 					})
 			}
 		} catch (error) {
-			return res.status(500).json(error)
+			return res.status(HTTP.INTERNAL_SERVER_ERROR).json(error)
 		}
 	}
 
-	static async signup(req: Request, res: Response): Response {
+	static async signup(req: Request, res: Response<InsertOneResult | Error>) {
 		const { password, pseudo, email }: { password: string, pseudo: string, email: string } = req.body;
 
 		if (!email || !password || !pseudo) {
 			// email, password or pseudo empty
-			return res.status(400).json({
-				status: "Error 400: Bad request",
+			return res.status(HTTP.BAD_REQUEST).json({
+				error: "Error 400: Bad request",
 			});
 		}
 
@@ -52,23 +54,20 @@ export class User {
 				"http://" + burl + "/users/" + userObject.insertedId
 			);
 
-			return res.status(201).json({
-				status: "201 Success : User created",
-				id: userObject.insertedId,
-			});
+			return res.status(HTTP.CREATED).json(userObject);
 
 		}
 		catch (error) {
-			return res.status(400).json({ status: "Error 400: Impossible to create a new user", error });
+			return res.status(HTTP.BAD_REQUEST).json({ error });
 		}
 
 	}
 
-	static async login(req: Request, res: Response): Response {
-		const { password, email }: { password: string, email: string } = req.body;
+	static async login(req: Request<any, any, { password: string, email: string }>, res: Response<{ token: string, id: ObjectId } | Error>) {
+		const { password, email }: { password: string, email: string } = req.body
 		if (!email || !password) {
 			return res.status(400).json({
-				status: "Error 400 : Invalid request",
+				error: "Error 400 : Invalid request",
 			});
 		}
 		try {
@@ -82,20 +81,18 @@ export class User {
 				throw new Error("Can't authenticate")
 			}
 
-			return res.status(200).json({
+			return res.status(HTTP.ACCEPTED).json({
 				token: findUser.getToken(),
 				id: findUser._id,
-				status: "Status 200: Successful authentification",
 			});
 		} catch (error) {
-			return res.status(404).json({
-				status: "Error 404: Invalid credentials",
+			return res.status(HTTP.NOT_FOUND).json({
 				error,
 			});
 		}
 	}
 
-	static async delUser(req: Request, res: Response): Response {
+	static async delUser(req: Request, res: Response<DeleteResult | { deletedUser: DeleteResult, deletedPosts: DeleteResult } | Error>) {
 		const id: ObjectId = req.authData._id;
 
 		try {
@@ -106,21 +103,20 @@ export class User {
 					const delUser = await DBVars.users.deleteOne({ _id: id });
 
 					if (delUser.acknowledged && delUser.deletedCount == 0) {
-						return res.status(404).json({
+						return res.status(HTTP.NOT_FOUND).json({
 							error: "Error 404: the user to delete has not been found"
 						});
 					}
 
 					return res
-						.status(200)
+						.status(HTTP.ACCEPTED)
 						.json({
-							status: "Status 200: User and posts deleted successfully",
-							delUser,
-							delPosts
+							deletedUser: delUser,
+							deletedPosts: delPosts
 						});
 
 				} else {
-					return res.status(500).json({ error: "Error 500: internal server error" })
+					return res.status(HTTP.INTERNAL_SERVER_ERROR).json({ error: "Error 500: internal server error" })
 				}
 
 
@@ -129,57 +125,54 @@ export class User {
 				const delUser = await DBVars.users.deleteOne({ _id: id });
 
 				if (delUser.deletedCount == 0) {
-					return res.status(404).json({
-						status: "Error 404: the user to delete has not been found"
+					return res.status(HTTP.NOT_FOUND).json({
+						error: "Error 404: the user to delete has not been found"
 					});
 				}
 
 				return res
-					.status(200)
-					.json({
-						status: "Status 200: User deleted successfully",
+					.status(HTTP.ACCEPTED)
+					.json(
 						delUser,
-					});
+					);
 			}
 
 		} catch (err) {
 
 			return res
-				.status(400)
+				.status(HTTP.NOT_FOUND)
 				.json({
 					error: err,
 				})
 		}
 	}
 
-	static async get(req: Request, res: Response): Response {
+	static async get(req: Request<any, any, any, Partial<UserSchema>>, res: Response<UserSchema[] | Error>) {
 
-		const reqParams = req.query;
+		const reqParams: Partial<UserSchema> = req.query;
 
 		// Converts the request id to an objectId because the get request parameters are strings
 		if (reqParams._id) {
-			reqParams._id = new ObjectId(reqParams._id);
+			reqParams._id = new ObjectId(req.query._id);
 		}
 
 		try {
-			const userData = (DBVars.users.find(reqParams, { projection: { _id: 1, pseudo: 1, email: 1, lastPosts: 1, timestamp: 1 }, }));
-			const returnedData = await userData.toArray();
+			const returnedData = await DBVars.users.find<UserSchema>(reqParams,
+				{ projection: { _id: 1, pseudo: 1, email: 1, lastPosts: 1, timestamp: 1 }, }).toArray();
 			return res.status(200)
-				.json({
-					status: "200 : Request completed",
+				.json(
 					returnedData,
-				});
+				);
 
 		} catch (err) {
 			return res.status(400)
 				.json({
-					status: "400 : Bad Request",
-					err,
+					error: err,
 				})
 		}
 	}
 
-	static async updateUserById(req: Request, res: Response): Response {
+	static async updateUserById(req: Request<{ authData: { _id: ObjectId } }>, res: Response<UpdateResult | Error>) {
 		const id: ObjectId = req.authData._id;
 
 		let updatedValues: UserSchema = req.body;
@@ -193,33 +186,25 @@ export class User {
 			)
 
 			if (result.matchedCount == 0) {
-				return res.status(404).json({
-					status: "Error 404: No matched users",
+				return res.status(HTTP.NOT_FOUND).json(
 					result
-				})
+				)
 			} else if (result.modifiedCount == 0) {
-				return res.status(304).json({
-					status: "Status 304: Ressource not modified"
+				return res.status(HTTP.NOT_MODIFIED).json({
+					error: "Status 304: Ressource not modified"
 				})
 			}
 
 			let userData =
-				"http://" + burl + "/users/" + id;
+				"<http://" + burl + "/users/" + id + ">; rel='data'; method='GET'";
 
-			return res.status(201).json({
-				result,
-				links: {
-					href: userData,
-					method: "GET",
-					rel: "data",
-				},
-			});
+			return res.status(HTTP.CREATED).header("Link",
+				userData).json(result);
 		}
 		catch (err) {
 			return res
 				.status(400)
 				.json({
-					status: "Error 400 : Bad Request",
 					error: err,
 				})
 
