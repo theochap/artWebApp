@@ -1,10 +1,10 @@
 import { Comments } from './lib.js';
 
-export function PublicCommentsMiddleware(app) {
+export function PublicReactionsMiddleware(app) {
     app.get("/", Comments.get)
 }
 
-export function PrivateCommentsMiddleware(app) {
+export function PrivateReactionsMiddleware(app) {
     app.post("/", Comments.add);
     app.delete("/", Comments.del);
     app.put("/", Comments.put);

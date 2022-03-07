@@ -59,6 +59,33 @@ export const PostsValidator = {
 			},
 			uniqueItems: true
 		},
+		lastComments: {
+			bsonType: "array",
+			description: "must be an array of [ObjectId (comment Id), string (author pseudo), string (comment content)]",
+			items: {
+				bsonType: "object",
+				required: ["_id", "pseudo", "content", "timestamp"],
+				additionalProperties: false,
+				properties: {
+					_id: {
+						bsonType: "objectId",
+						description: "must be a string representing the Comment ID"
+					},
+					pseudo: {
+						bsonType: "string",
+						description: "must be a string indicating the author pseudo"
+					},
+					content: {
+						bsonType: "string",
+						description: "must be a string indicating the comment content"
+					},
+					timestamp: {
+						bsonType: "date",
+						description: "the date at which the comment was created"
+					}
+				}
+			}
+		},
 		timestamp: {
 			bsonType: "date",
 			description: "must be a date that indicates the creation of the document. Is required"

@@ -5,6 +5,7 @@ import { DBVars } from "../../services/database.service.js";
 import { DeleteResult, InsertOneResult, ObjectId, UpdateResult } from 'mongodb';
 import { AuthData, Error } from "../common/routesTypes.js";
 import HTTP from "../common/errorCodes.js";
+import HttpStatusCode from "../common/errorCodes.js";
 var LIMIT_CONST = 15;
 
 export namespace Posts {
@@ -55,16 +56,16 @@ export namespace Posts {
 	}
 
 	export async function validate(
-		req: Request<AuthData, never, { postId: string }, never>,
+		req: Request<AuthData, never, { _id: string }, never>,
 		res: Response<UpdateResult | Error>) {
 
-		const { postId: postIdStr } = req.body;
-		const postId = new ObjectId(postIdStr)
+		let { _id: postIdStr } = req.body;
+		const _id = new ObjectId(postIdStr)
 
 		const thisAuthorId = req.authData._id;
 
 		try {
-			const finalPostDataCursor = await DBVars.posts.updateOne({ _id: postId },
+			const finalPostDataCursor = await DBVars.posts.updateOne({ _id: _id },
 				{ $pull: { validators: thisAuthorId } });
 
 			if (finalPostDataCursor.matchedCount == 0) {
@@ -92,6 +93,7 @@ export namespace Posts {
 
 		try {
 			const resUpdate = await DBVars.posts.updateOne({ _id: postId, "authors._id": authorId }, { $set: updatedValues });
+
 			if (resUpdate.matchedCount == 0) {
 				return res.status(HTTP.NOT_FOUND).json({ error: resUpdate })
 			} else if (resUpdate.modifiedCount == 0) {
@@ -99,6 +101,7 @@ export namespace Posts {
 			} else {
 				return res.status(HTTP.CREATED).json(resUpdate);
 			}
+
 		} catch (error) {
 			return res.status(HTTP.BAD_REQUEST).json({ error: error });
 		}
@@ -119,10 +122,10 @@ export namespace Posts {
 			const wallPosts = (DBVars.posts.find<PostSchema>(reqParams));
 			const returnedData = await wallPosts.toArray();
 
-			return res.status(200).json(returnedData);
+			return res.status(HttpStatusCode.ACCEPTED).json(returnedData);
 
 		} catch (error) {
-			return res.status(400).json({
+			return res.status(HTTP.BAD_REQUEST).json({
 				error
 			}
 			);

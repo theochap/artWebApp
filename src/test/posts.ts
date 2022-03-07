@@ -12,6 +12,8 @@ import { before } from "mocha";
 import { CreateTestUser, LoginTestUser } from "./user";
 import { ObjectId } from "mongodb";
 import { testUser } from "./user"
+import HttpStatusCode from "../controllers/common/errorCodes";
+import { Routes } from "../server"
 
 let should = chai.should();
 
@@ -29,7 +31,7 @@ export async function CreateTestPost(app: Application, user: UserCredentials, po
 
     authToken = "Bearer " + resLogin.body.token;
 
-    const res = await chai.request(app).post("/posts/").set("Authorization", authToken).send(post)
+    const res = await chai.request(app).post(Routes.posts).set("Authorization", authToken).send(post)
     res.should.have.status(201)
     return res
 }
@@ -69,7 +71,7 @@ describe("Posts", () => {
             }];
 
             postList.forEach(async post => {
-                const res = await chai.request(app).post("/posts/").set("Authorization", authToken).send(post)
+                const res = await chai.request(app).post(Routes.posts).set("Authorization", authToken).send(post)
                 res.should.have.status(400)
                 res.body.should.have.property("text").eql("Error 400: Invalid format")
             })
@@ -78,15 +80,28 @@ describe("Posts", () => {
     })
 
     describe("/GET /posts/", () => {
+        it("Should return all the posts when queried without any parameter", async () => {
+            await CreateTestPost(app, testUser, testPost)
+            await CreateTestPost(app, testUser, testPost)
+
+            const resGetAll = await chai.request(app).get(Routes.posts)
+            resGetAll.should.have.status(HttpStatusCode.ACCEPTED)
+            resGetAll.body.should.be.a('array')
+            resGetAll.body.should.have.lengthOf(2)
+        })
+
+
         it("Should return a correct post representation when queried", async () => {
             const resPost = await CreateTestPost(app, testUser, testPost)
 
             const postId = resPost.body.insertedId
 
-            const resGet = await chai.request(app).get("/posts/").query({ _id: postId })
-            resGet.should.have.status(200)
+            const resGet = await chai.request(app).get(Routes.posts).query({ _id: postId })
+            resGet.should.have.status(HttpStatusCode.ACCEPTED)
             resGet.body.should.be.a('array')
             resGet.body.should.have.lengthOf(1)
+
+
         })
 
     })
@@ -103,7 +118,7 @@ describe("Posts", () => {
             }
 
 
-            const resUpdated = await chai.request(app).put("/posts/").set("Authorization", authToken).send(updatedPost)
+            const resUpdated = await chai.request(app).put(Routes.posts).set("Authorization", authToken).send(updatedPost)
             resUpdated.should.have.status(201)
             resUpdated.body.should.have.property("matchedCount").eql(1)
             resUpdated.body.should.have.property("modifiedCount").eql(1)
@@ -123,7 +138,7 @@ describe("Posts", () => {
 
             resPost.body.insertedId
 
-            const resUpdated = await chai.request(app).put("/posts/").set("Authorization", authToken).send(updatedPost)
+            const resUpdated = await chai.request(app).put(Routes.posts).set("Authorization", authToken).send(updatedPost)
             resUpdated.should.have.status(400)
         })
 
@@ -141,7 +156,7 @@ describe("Posts", () => {
                 }, postId: resPost.body.insertedId
             }
 
-            const resUpdated = await chai.request(app).put("/posts/").set("Authorization", "Bearer " + resLogin.body.token).send(updatedPost)
+            const resUpdated = await chai.request(app).put(Routes.posts).set("Authorization", "Bearer " + resLogin.body.token).send(updatedPost)
             resUpdated.should.have.status(404)
         })
     })
@@ -150,7 +165,7 @@ describe("Posts", () => {
         it("Should delete the post when the correct credential is provided", async () => {
             const resPost = await CreateTestPost(app, testUser, testPost)
 
-            const resDeleted = await chai.request(app).delete("/posts/").set("Authorization", authToken).send({ _id: resPost.body.insertedId })
+            const resDeleted = await chai.request(app).delete(Routes.posts).set("Authorization", authToken).send({ _id: resPost.body.insertedId })
             resDeleted.should.have.status(200)
         })
         it("Shouldn't delete the post if the user is not the author", async () => {
@@ -160,7 +175,7 @@ describe("Posts", () => {
             await CreateTestUser(app, newTestUser)
             const resLogin = await LoginTestUser(app, newTestUser)
 
-            const resDeleted = await chai.request(app).delete("/posts/").set("Authorization", "Bearer " + resLogin.body.token).send({ _id: resPost.body.insertedId })
+            const resDeleted = await chai.request(app).delete(Routes.posts).set("Authorization", "Bearer " + resLogin.body.token).send({ _id: resPost.body.insertedId })
             resDeleted.should.have.status(404)
         })
 
@@ -181,19 +196,19 @@ describe("Posts", () => {
             const resPost = await CreateTestPost(app, testUser, testPost)
             resPost.should.have.status(201)
 
-            const postId = resPost.body.insertedId
+            const _id = resPost.body.insertedId
 
-            const resGet = await chai.request(app).get("/posts/").query({ _id: postId })
+            const resGet = await chai.request(app).get(Routes.posts).query({ _id: _id })
             resGet.body[0].should.have.property("validators")
             resGet.body[0].validators.should.have.a.lengthOf(1)
 
 
-            let validatePost = await chai.request(app).post("/posts/validate").set("Authorization", authToken).send({ postId })
+            let validatePost = await chai.request(app).post("/posts/validate").set("Authorization", authToken).send({ _id })
             validatePost.should.have.status(304)
 
             const resLogin = await LoginTestUser(app, newTestUser)
 
-            validatePost = await chai.request(app).post("/posts/validate").set("Authorization", "Bearer " + resLogin.body.token).send({ postId })
+            validatePost = await chai.request(app).post("/posts/validate").set("Authorization", "Bearer " + resLogin.body.token).send({ _id })
             validatePost.should.have.status(201)
 
         })

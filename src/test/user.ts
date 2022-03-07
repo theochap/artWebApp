@@ -5,7 +5,7 @@ import { User as UserSchema, UserCredentials } from "../schema/modelUser";
 import { ConnectToDatabase, DBVars } from '../services/database.service';
 import chai from "chai";
 import chaiHttp from "chai-http";
-import { app } from '../server';
+import { app, Routes } from '../server';
 import jwt = require("jwt-simple");
 import { Application } from "express";
 import config from "config";
@@ -26,7 +26,7 @@ export const testUser: UserCredentials = {
 }
 
 export async function CreateTestUser(app: Application, user: { email: string, pseudo: string, password: string }) {
-    const res = await chai.request(app).post("/users").send(user);
+    const res = await chai.request(app).post(Routes.users).send(user);
     res.should.have.status(201);
     res.body.should.have.property("insertedId");
     return res;
@@ -54,7 +54,7 @@ describe("Users", () => {
     // Test the GET route to verify that the database was well emptied
     describe("/GET users void", () => {
         it("Should initially GET an empty set of users", (done) => {
-            chai.request(app).get("/users").end((_, res) => {
+            chai.request(app).get(Routes.users).end((_, res) => {
                 res.should.have.status(200);
                 res.should.be.a("object");
                 res.body.should.be.a("array");
@@ -73,7 +73,7 @@ describe("Users", () => {
                 email: "test@gmail.com",
                 password: "test"
             }
-            chai.request(app).post("/users").send(user).end((_, res) => {
+            chai.request(app).post(Routes.users).send(user).end((_, res) => {
                 res.should.have.status(400);
                 done();
             });
@@ -83,7 +83,7 @@ describe("Users", () => {
                 pseudo: "test@gmail.com",
                 password: "test"
             }
-            chai.request(app).post("/users").send(user).end((_, res) => {
+            chai.request(app).post(Routes.users).send(user).end((_, res) => {
                 res.should.have.status(400);
                 done();
             });
@@ -93,7 +93,7 @@ describe("Users", () => {
                 email: "test@gmail.com",
                 pseudo: "test"
             }
-            chai.request(app).post("/users").send(user).end((_, res) => {
+            chai.request(app).post(Routes.users).send(user).end((_, res) => {
                 res.should.have.status(400);
                 done();
             });
@@ -107,7 +107,7 @@ describe("Users", () => {
 
             await CreateTestUser(app, testUser)
 
-            const res = await chai.request(app).post("/users").send(testUser)
+            const res = await chai.request(app).post(Routes.users).send(testUser)
             res.should.have.status(400);
             res.body.should.have.property("error");
         });
@@ -116,6 +116,20 @@ describe("Users", () => {
 
     // Test user getter
     describe("/GET /users/", () => {
+        it("Should return all the users when queried without any parameter", async () => {
+            await CreateTestUser(app, testUser)
+            await CreateTestUser(app, {
+                email: "test2@gmail.com",
+                password: "test2",
+                pseudo: "test2"
+            })
+
+            let resGet = await chai.request(app).get("/users/")
+            resGet.should.have.status(200)
+            resGet.body.should.be.a("array");
+            resGet.body.should.have.lengthOf(2)
+        })
+
         it("Should be able to retrieve the user by id correctly", async () => {
 
             let userCreated = await CreateTestUser(app, testUser);
@@ -237,22 +251,31 @@ describe("Users", () => {
 
     // Test update route
     describe("/PUT /users/", () => {
-        it("Should be able to update the data of a single user", async () => {
+        it("Should be able to update the data of a single user", () => {
 
-            const userUpdated: UserCredentials = {
+            const usersUpdated: Partial<UserCredentials>[] = [{
                 email: "newTest@gmail.com",
                 password: "newTest",
                 pseudo: "newTest",
-            };
+            }, {
+                password: "newTest2"
+            }, {
+                email: "newTest2@gmail.com"
+            }, {
+                pseudo: "newTest2",
+            }];
 
-            CreateTestUser(app, testUser);
-            const resLogin = await LoginTestUser(app, testUser);
-            const resUpdated = await chai.request(app).put("/users/")
-                .set("Authorization", "Bearer " + resLogin.body.token).send(userUpdated);
 
-            resUpdated.should.have.status(201);
-            resUpdated.body.should.have.property("modifiedCount").eql(1);
-            resUpdated.body.should.have.property("matchedCount").eql(1);
+            usersUpdated.forEach(async userUpdated => {
+                CreateTestUser(app, testUser);
+                const resLogin = await LoginTestUser(app, testUser);
+                const resUpdated = await chai.request(app).put("/users/")
+                    .set("Authorization", "Bearer " + resLogin.body.token).send(userUpdated);
+
+                resUpdated.should.have.status(201);
+                resUpdated.body.should.have.property("modifiedCount").eql(1);
+                resUpdated.body.should.have.property("matchedCount").eql(1);
+            })
         });
 
         it("Shouldn't update the user if one tries to update the id", async () => {

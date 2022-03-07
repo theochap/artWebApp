@@ -53,6 +53,7 @@ export class User {
                     bsonType: "date",
                     description: "must be a date indicating the creation of the document. Is required"
                 }
+
             }
         }
     }

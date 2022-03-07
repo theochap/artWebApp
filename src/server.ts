@@ -5,10 +5,12 @@ import express from "express";
 import { PublicUserMiddleware, PrivateUserMiddleware } from "./controllers/user/userController"
 import { Authentificate } from './controllers/common/userAuthentification';
 import { PublicWallMiddleware, PrivateWallMiddleware } from './controllers/post/postController';
-import { PublicCommentsMiddleware, PrivateCommentsMiddleware } from './controllers/comments/commentsController';
+import { PublicReactionsMiddleware, PrivateReactionsMiddleware } from './controllers/reactions/reactionsController';
 import { ConnectToDatabase } from './services/database.service';
 import config from "config";
 import morgan from "morgan";
+
+export const Routes = { users: "/users", posts: "/posts", reactions: "/reactions" }
 
 // Create an express app, exported for testing purposes
 export const app = express();
@@ -40,27 +42,27 @@ ConnectToDatabase().then(() => {
 
 	const publicUserRouter = express.Router();
 	PublicUserMiddleware(publicUserRouter);
-	app.use("/users", publicUserRouter);
+	app.use(Routes.users, publicUserRouter);
 
 	const privateUserRouter = express.Router();
 	PrivateUserMiddleware(privateUserRouter);
-	app.use("/users", Authentificate.parseToken, Authentificate.authMiddleware, privateUserRouter);
+	app.use(Routes.users, Authentificate.parseToken, Authentificate.authMiddleware, privateUserRouter);
 
 	const publicWallRouter = express.Router();
 	PublicWallMiddleware(publicWallRouter);
-	app.use("/posts", publicWallRouter);
+	app.use(Routes.posts, publicWallRouter);
 
 	const privateWallRouter = express.Router();
 	PrivateWallMiddleware(privateWallRouter);
-	app.use("/posts", Authentificate.parseToken, Authentificate.authMiddleware, privateWallRouter);
+	app.use(Routes.posts, Authentificate.parseToken, Authentificate.authMiddleware, privateWallRouter);
 
 	const publicCommentsRouter = express.Router();
-	PublicCommentsMiddleware(publicCommentsRouter);
-	app.use("/comments", publicCommentsRouter);
+	PublicReactionsMiddleware(publicCommentsRouter);
+	app.use(Routes.reactions, publicCommentsRouter);
 
 	const privateCommentsRouter = express.Router();
-	PrivateCommentsMiddleware(privateCommentsRouter);
-	app.use("/comments", Authentificate.parseToken, Authentificate.authMiddleware, privateCommentsRouter);
+	PrivateReactionsMiddleware(privateCommentsRouter);
+	app.use(Routes.reactions, Authentificate.parseToken, Authentificate.authMiddleware, privateCommentsRouter);
 
 	app.get("/", (req, res) => { res.status(200).json({ text: "Status 200: Success" }) });
 

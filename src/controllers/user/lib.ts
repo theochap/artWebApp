@@ -191,7 +191,8 @@ export namespace User {
 		const id: ObjectId = req.authData._id;
 
 		let updatedValues: Partial<UserSchema> = req.body;
-		updatedValues.password = "password" in req.body ? passwordHash.generate(req.body.password) : null
+
+		if ("password" in req.body) updatedValues.password = passwordHash.generate(req.body.password);
 
 		try {
 
