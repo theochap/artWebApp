@@ -13,6 +13,7 @@ export namespace User {
 	export namespace Request {
 		export type Add = UserCredentials
 		export type Login = { password: string, email: string }
+		export type Follow = { _id: ObjectId }
 		export type Del = { deletePosts: number }
 		export type Get = Partial<UserSchema>
 		export type Put = Partial<UserSchema>
@@ -72,6 +73,52 @@ export namespace User {
 		}
 		catch (error) {
 			return res.status(HTTP.BAD_REQUEST).json({ error });
+		}
+
+	}
+
+	export async function Follow(
+		req: Request<never, never, Request.Follow, never>,
+		res: Response<UpdateResult | Error>) {
+
+		const _id = new ObjectId(req.body._id)
+		try {
+			const updateRes = await DBVars.users.updateOne({ _id: req.authData }, { $push: { follows: _id } })
+			if (updateRes.matchedCount == 0) {
+				return res.status(HTTP.NOT_FOUND).json({ error: "User not found" })
+			} else if (updateRes.modifiedCount == 0) {
+				return res.status(HTTP.NOT_MODIFIED).json({ error: "Ressource not modified" })
+			} else if (updateRes.acknowledged == false) {
+				return res.status(HTTP.INTERNAL_SERVER_ERROR).json({ error: "Internal server error" })
+			} else {
+				return res.status(HTTP.CREATED).json(updateRes)
+			}
+
+		} catch (error) {
+			return res.status(HTTP.BAD_REQUEST).json({ error })
+		}
+
+	}
+
+	export async function UnFollow(
+		req: Request<never, never, Request.Follow, never>,
+		res: Response<UpdateResult | Error>) {
+
+		const _id = new ObjectId(req.body._id)
+		try {
+			const updateRes = await DBVars.users.updateOne({ _id: req.authData }, { $pop: { follows: _id } })
+			if (updateRes.matchedCount == 0) {
+				return res.status(HTTP.NOT_FOUND).json({ error: "User not found" })
+			} else if (updateRes.modifiedCount == 0) {
+				return res.status(HTTP.NOT_MODIFIED).json({ error: "Ressource not modified" })
+			} else if (updateRes.acknowledged == false) {
+				return res.status(HTTP.INTERNAL_SERVER_ERROR).json({ error: "Internal server error" })
+			} else {
+				return res.status(HTTP.CREATED).json(updateRes)
+			}
+
+		} catch (error) {
+			return res.status(HTTP.BAD_REQUEST).json({ error })
 		}
 
 	}

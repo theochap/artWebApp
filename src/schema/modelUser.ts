@@ -49,6 +49,14 @@ export class User {
                     bsonType: "string",
                     description: "must be a string and is required"
                 },
+                follows: {
+                    bsonType: "array",
+                    description: "List of users followed by a given user",
+                    items: {
+                        bsonType: "objectId"
+                    },
+                    uniqueItems: true
+                },
                 timestamp: {
                     bsonType: "date",
                     description: "must be a date indicating the creation of the document. Is required"

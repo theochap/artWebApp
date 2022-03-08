@@ -12,7 +12,7 @@ import morgan from "morgan";
 
 export const Routes = { users: "/users", posts: "/posts", reactions: "/reactions" }
 export const SubRoutes = {
-	users: { login: "/login", auth: "/auth" },
+	users: { login: "/login", auth: "/auth", follow: "/follow" },
 	posts: { validate: "/validate" },
 	reactions: { comments: "/comments", emojis: "/emojis" }
 }
