@@ -5,7 +5,7 @@ import { User as UserSchema, UserCredentials } from "../schema/modelUser";
 import { ConnectToDatabase, DBVars } from '../services/database.service';
 import chai from "chai";
 import chaiHttp from "chai-http";
-import { app, Routes } from '../server';
+import { App, Routes, SubRoutes } from '../server';
 import jwt = require("jwt-simple");
 import { Application } from "express";
 import config from "config";
@@ -13,13 +13,13 @@ import { before } from "mocha";
 import { Posts } from "../schema/modelPosts";
 import { CreateTestPost } from "./posts";
 import { InsertOneResult } from "mongodb";
-import { Error } from "../controllers/common/routesTypes"
+import { Error } from "../controllers/common/routes"
 
 let should = chai.should();
 
 chai.use(chaiHttp);
 
-export const testUser: UserCredentials = {
+export const TestUser: UserCredentials = {
     email: "test@gmail.com",
     password: "test",
     pseudo: "test"
@@ -33,7 +33,7 @@ export async function CreateTestUser(app: Application, user: { email: string, ps
 }
 
 export async function LoginTestUser(app: Application, user: { email: string, password: string }) {
-    const res = await chai.request(app).post("/users/login").send(user);
+    const res = await chai.request(app).post(Routes.users + SubRoutes.users.login).send(user);
     res.should.have.status(202);
     res.body.should.have.property("token");
     return res
@@ -54,7 +54,7 @@ describe("Users", () => {
     // Test the GET route to verify that the database was well emptied
     describe("/GET users void", () => {
         it("Should initially GET an empty set of users", (done) => {
-            chai.request(app).get(Routes.users).end((_, res) => {
+            chai.request(App).get(Routes.users).end((_, res) => {
                 res.should.have.status(200);
                 res.should.be.a("object");
                 res.body.should.be.a("array");
@@ -73,7 +73,7 @@ describe("Users", () => {
                 email: "test@gmail.com",
                 password: "test"
             }
-            chai.request(app).post(Routes.users).send(user).end((_, res) => {
+            chai.request(App).post(Routes.users).send(user).end((_, res) => {
                 res.should.have.status(400);
                 done();
             });
@@ -83,7 +83,7 @@ describe("Users", () => {
                 pseudo: "test@gmail.com",
                 password: "test"
             }
-            chai.request(app).post(Routes.users).send(user).end((_, res) => {
+            chai.request(App).post(Routes.users).send(user).end((_, res) => {
                 res.should.have.status(400);
                 done();
             });
@@ -93,21 +93,21 @@ describe("Users", () => {
                 email: "test@gmail.com",
                 pseudo: "test"
             }
-            chai.request(app).post(Routes.users).send(user).end((_, res) => {
+            chai.request(App).post(Routes.users).send(user).end((_, res) => {
                 res.should.have.status(400);
                 done();
             });
         });
         it("Should POST a correct user otherwise", done => {
-            CreateTestUser(app, testUser)
+            CreateTestUser(App, TestUser)
             done()
         });
 
         it("Should not be able to POST the same user another time", async () => {
 
-            await CreateTestUser(app, testUser)
+            await CreateTestUser(App, TestUser)
 
-            const res = await chai.request(app).post(Routes.users).send(testUser)
+            const res = await chai.request(App).post(Routes.users).send(TestUser)
             res.should.have.status(400);
             res.body.should.have.property("error");
         });
@@ -117,14 +117,14 @@ describe("Users", () => {
     // Test user getter
     describe("/GET /users/", () => {
         it("Should return all the users when queried without any parameter", async () => {
-            await CreateTestUser(app, testUser)
-            await CreateTestUser(app, {
+            await CreateTestUser(App, TestUser)
+            await CreateTestUser(App, {
                 email: "test2@gmail.com",
                 password: "test2",
                 pseudo: "test2"
             })
 
-            let resGet = await chai.request(app).get("/users/")
+            let resGet = await chai.request(App).get(Routes.users)
             resGet.should.have.status(200)
             resGet.body.should.be.a("array");
             resGet.body.should.have.lengthOf(2)
@@ -132,9 +132,9 @@ describe("Users", () => {
 
         it("Should be able to retrieve the user by id correctly", async () => {
 
-            let userCreated = await CreateTestUser(app, testUser);
+            let userCreated = await CreateTestUser(App, TestUser);
 
-            let resGet = await chai.request(app).get("/users/").query({ _id: userCreated.body.id })
+            let resGet = await chai.request(App).get(Routes.users).query({ _id: userCreated.body.id })
             resGet.should.have.status(200)
             resGet.body.should.be.a("array");
             resGet.body.should.have.lengthOf(1)
@@ -143,16 +143,16 @@ describe("Users", () => {
         });
         it("Should be able to retrieve the user by another property correctly", async () => {
 
-            let userCreated = await CreateTestUser(app, testUser);
+            let userCreated = await CreateTestUser(App, TestUser);
 
-            let resGet = await chai.request(app).get("/users/").query({ email: testUser.email })
+            let resGet = await chai.request(App).get(Routes.users).query({ email: TestUser.email })
             resGet.should.have.status(200)
             resGet.body.should.be.a("array");
             resGet.body.should.have.lengthOf(1)
             resGet.body[0].should.have.property('email').eql("test@gmail.com")
             resGet.body[0].should.have.property('pseudo').eql("test")
 
-            resGet = await chai.request(app).get("/users/").query({ pseudo: testUser.pseudo })
+            resGet = await chai.request(App).get(Routes.users).query({ pseudo: TestUser.pseudo })
             resGet.should.have.status(200)
             resGet.body.should.be.a("array");
             resGet.body.should.have.lengthOf(1)
@@ -163,9 +163,9 @@ describe("Users", () => {
 
         it("Should fail otherwise", async () => {
 
-            let userCreated = await CreateTestUser(app, testUser);
+            let userCreated = await CreateTestUser(App, TestUser);
 
-            let resGet = await chai.request(app).get("/users/").query({ email: "falsemail" })
+            let resGet = await chai.request(App).get(Routes.users).query({ email: "falsemail" })
             resGet.should.have.status(200)
             resGet.body.should.be.a("array");
             resGet.body.should.have.lengthOf(0)
@@ -184,9 +184,9 @@ describe("Users", () => {
                 password: "test"
             }
 
-            const PostRes = await CreateTestUser(app, testUser);
+            const PostRes = await CreateTestUser(App, TestUser);
 
-            const LoginRes = await chai.request(app).post("/users/login").send(userLogin);
+            const LoginRes = await chai.request(App).post(Routes.users + SubRoutes.users.login).send(userLogin);
 
             LoginRes.should.have.status(202);
             LoginRes.body.should.have.property("id").eql(PostRes.body.insertedId);
@@ -219,15 +219,15 @@ describe("Users", () => {
                 email: "test@gmail.com"
             };
 
-            const postRes = await CreateTestUser(app, user0);
+            const postRes = await CreateTestUser(App, user0);
 
-            let res1 = await chai.request(app).post("/users/login").send(user1);
+            let res1 = await chai.request(App).post(Routes.users + SubRoutes.users.login).send(user1);
             res1.should.have.status(404);
 
-            let res2 = await chai.request(app).post("/users/login").send(user2);
+            let res2 = await chai.request(App).post(Routes.users + SubRoutes.users.login).send(user2);
             res2.should.have.status(404);
 
-            let res3 = await chai.request(app).post("/users/login").send(user3);
+            let res3 = await chai.request(App).post(Routes.users + SubRoutes.users.login).send(user3);
             res3.should.have.status(400);
 
         });
@@ -237,13 +237,13 @@ describe("Users", () => {
     // Test authentification
     describe("/GET /users/auth", () => {
         it("Should execute correctly if the good token is provided", async () => {
-            CreateTestUser(app, testUser);
-            const resLogin = await LoginTestUser(app, testUser);
-            const resAuth = await chai.request(app).get("/users/auth").set("Authorization", "Bearer " + resLogin.body.token);
+            CreateTestUser(App, TestUser);
+            const resLogin = await LoginTestUser(App, TestUser);
+            const resAuth = await chai.request(App).get(Routes.users + SubRoutes.users.auth).set("Authorization", "Bearer " + resLogin.body.token);
             resAuth.should.have.status(202);
         });
         it("Should fail otherwise", async () => {
-            const resAuth = await chai.request(app).get("/users/auth").set("Authorization", "Bearer ");
+            const resAuth = await chai.request(App).get(Routes.users + SubRoutes.users.auth).set("Authorization", "Bearer ");
             resAuth.should.have.status(403);
 
         });
@@ -267,9 +267,9 @@ describe("Users", () => {
 
 
             usersUpdated.forEach(async userUpdated => {
-                CreateTestUser(app, testUser);
-                const resLogin = await LoginTestUser(app, testUser);
-                const resUpdated = await chai.request(app).put("/users/")
+                CreateTestUser(App, TestUser);
+                const resLogin = await LoginTestUser(App, TestUser);
+                const resUpdated = await chai.request(App).put(Routes.users)
                     .set("Authorization", "Bearer " + resLogin.body.token).send(userUpdated);
 
                 resUpdated.should.have.status(201);
@@ -284,9 +284,9 @@ describe("Users", () => {
                 _id: "12345"
             };
 
-            CreateTestUser(app, testUser);
-            const resLogin = await LoginTestUser(app, testUser);
-            const resUpdated = await chai.request(app).put("/users/")
+            CreateTestUser(App, TestUser);
+            const resLogin = await LoginTestUser(App, TestUser);
+            const resUpdated = await chai.request(App).put(Routes.users)
                 .set("Authorization", "Bearer " + resLogin.body.token).send(userUpdated);
 
             resUpdated.should.have.status(400);
@@ -298,9 +298,9 @@ describe("Users", () => {
                 wrongField: "12345"
             };
 
-            CreateTestUser(app, testUser);
-            const resLogin = await LoginTestUser(app, testUser);
-            const resUpdated = await chai.request(app).put("/users/")
+            CreateTestUser(App, TestUser);
+            const resLogin = await LoginTestUser(App, TestUser);
+            const resUpdated = await chai.request(App).put(Routes.users)
                 .set("Authorization", "Bearer " + resLogin.body.token).send(userUpdated);
 
             resUpdated.should.have.status(400);
@@ -323,14 +323,14 @@ describe("Users", () => {
                 pseudo: "test2",
             }
 
-            const resCreateUser1 = await CreateTestUser(app, testUser);
+            const resCreateUser1 = await CreateTestUser(App, TestUser);
 
-            const resCreateUser2 = await CreateTestUser(app, testUser2)
+            const resCreateUser2 = await CreateTestUser(App, testUser2)
 
             const idUser1 = resCreateUser1.body.insertedId
             const idUser2 = resCreateUser2.body.insertedId
 
-            resLogin = await LoginTestUser(app, testUser)
+            resLogin = await LoginTestUser(App, TestUser)
 
             const testPost1: Posts = {
                 title: "Hello",
@@ -343,24 +343,24 @@ describe("Users", () => {
                 authors: [idUser1]
             }
 
-            resCreatePost1 = await CreateTestPost(app, testUser, testPost1)
-            resCreatePost2 = await CreateTestPost(app, testUser, testPost2)
+            resCreatePost1 = await CreateTestPost(App, TestUser, testPost1)
+            resCreatePost2 = await CreateTestPost(App, TestUser, testPost2)
 
         })
 
         it("Should only delete the user if deletePosts is not defined", async () => {
-            const resDelete = await chai.request(app).delete("/users/").set("Authorization", "Bearer " + resLogin.body.token)
+            const resDelete = await chai.request(App).delete(Routes.users).set("Authorization", "Bearer " + resLogin.body.token)
             resDelete.should.have.status(202)
 
-            const resFind = await chai.request(app).get("/posts/").query({})
+            const resFind = await chai.request(App).get(Routes.posts).query({})
             resFind.body.should.have.lengthOf(2)
         })
 
         it("Should also delete the posts created by the user, and update the others when deletePost is set to one", async () => {
-            const resDelete = await chai.request(app).delete("/users/").set("Authorization", "Bearer " + resLogin.body.token).send({ deletePosts: 1 })
+            const resDelete = await chai.request(App).delete(Routes.users).set("Authorization", "Bearer " + resLogin.body.token).send({ deletePosts: 1 })
             resDelete.should.have.status(202)
 
-            const resFind = await chai.request(app).get("/posts/").query({})
+            const resFind = await chai.request(App).get(Routes.posts).query({})
             resFind.body.should.have.lengthOf(1)
         })
     })

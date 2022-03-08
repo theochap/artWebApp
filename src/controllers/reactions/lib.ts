@@ -1,17 +1,26 @@
 import { DBVars } from "../../services/database.service";
 import { Request, Response } from "express";
 import { User as UserSchema, UserCredentials } from "../../schema/modelUser";
-import { DeleteResult, InsertOneResult, ObjectId, UpdateResult } from "mongodb";
-import { AuthData, Error } from "../common/routesTypes";
+import { DeleteResult, FindCursor, InsertOneResult, ObjectId, UpdateResult } from "mongodb";
+import { AuthData, Error } from "../common/routes";
 import HTTP from "../common/errorCodes";
 import { ReactionContent, Comments as ReactionSchema } from "../../schema/modelReactions";
 import config from "config";
 const jwt = require("jsonwebtoken");
 const burl = "localhost:8080";
 
-export namespace Comments {
-    export async function add(
-        req: Request<AuthData, never, { content: ReactionContent, post: ObjectId, parentComment?: ObjectId }, never>,
+
+
+export namespace Reactions {
+    export namespace Request {
+        export type Add = { content: ReactionContent, post: ObjectId, parentComment?: ObjectId }
+        export type Put = { _id: string, updatedContent: string }
+        export type Get = Partial<ReactionSchema>
+        export type Del = { _id: string }
+    }
+
+    export async function Add(
+        req: Request<AuthData, never, Request.Add, never>,
         res: Response<InsertOneResult | Error>
     ) {
 
@@ -41,8 +50,8 @@ export namespace Comments {
     }
 
 
-    export async function put(
-        req: Request<AuthData, never, { _id: string, updatedContent: string }, never>,
+    export async function Put(
+        req: Request<AuthData, never, Request.Put, never>,
         res: Response<UpdateResult | Error>) {
 
         const author: ObjectId = req.authData._id;
@@ -64,29 +73,44 @@ export namespace Comments {
 
     }
 
-    export async function get(
-        req: Request<never, never, never, Partial<ReactionSchema>>,
-        res: Response<ReactionSchema[] | Error>) {
-        try {
-            const reqParams: Partial<ReactionSchema> = req.query
 
-            if (reqParams._id) reqParams._id = new ObjectId(req.query._id);
+    function getAnd(queryParams) {
+        return async function get(
+            req: Request<never, never, never, Request.Get>,
+            res: Response<ReactionSchema[] | Error>) {
+            try {
+                const reqParams: Request.Get = req.query
 
-            const foundComments = (DBVars.reactions.find<ReactionSchema>(reqParams));
-            const returnedData = await foundComments.toArray();
+                if ("_id" in reqParams) reqParams._id = new ObjectId(req.query._id);
 
-            return res.status(HTTP.ACCEPTED).json(returnedData);
+                const foundComments = DBVars.reactions.find<ReactionSchema>({ $and: [req.query, queryParams] });
 
-        } catch (error) {
-            return res.status(HTTP.BAD_REQUEST).json({
-                error
+                const returnedData = await foundComments.toArray();
+
+                return res.status(HTTP.ACCEPTED).json(returnedData);
+
+            } catch (error) {
+                return res.status(HTTP.BAD_REQUEST).json({
+                    error
+                }
+                );
             }
-            );
         }
     }
 
-    export async function del(
-        req: Request<never, never, { _id: string }, never>,
+    export function GetAll(req: Request<never, never, never, Request.Get>,
+        res: Response<ReactionSchema[] | Error>) { return getAnd({})(req, res) }
+
+    export function GetComments(req, res) {
+        return getAnd({ "content.text": { $exists: true } })(req, res)
+    }
+
+    export function GetEmojis(req, res) {
+        return getAnd({ "content.emoji": { $exists: true } })(req, res)
+    }
+
+    export async function Del(
+        req: Request<never, never, Request.Del, never>,
         res: Response<DeleteResult | Error>) {
         try {
             const _id: ObjectId = new ObjectId(req.body._id);

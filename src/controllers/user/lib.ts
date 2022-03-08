@@ -4,13 +4,21 @@ import { User as UserSchema, UserCredentials } from "../../schema/modelUser";
 import { DeleteResult, InsertOneResult, ObjectId, UpdateResult } from "mongodb";
 import passwordHash = require("password-hash");
 import { fail } from "assert";
-import { AuthData, Error } from "../common/routesTypes";
+import { AuthData, Error } from "../common/routes";
 import HTTP from "../common/errorCodes";
 const jwt = require("jsonwebtoken");
 const burl = "localhost:8080";
 
 export namespace User {
-	export async function authTest(
+	export namespace Request {
+		export type Add = UserCredentials
+		export type Login = { password: string, email: string }
+		export type Del = { deletePosts: number }
+		export type Get = Partial<UserSchema>
+		export type Put = Partial<UserSchema>
+	}
+
+	export async function AuthTest(
 		req: Request<AuthData, never, never, never>,
 		res: Response<{ _id: ObjectId } | Error>) {
 		try {
@@ -28,8 +36,8 @@ export namespace User {
 		}
 	}
 
-	export async function signup(
-		req: Request<never, never, UserCredentials, never>,
+	export async function Signup(
+		req: Request<never, never, Request.Add, never>,
 		res: Response<InsertOneResult | Error>) {
 
 		const { password, pseudo, email }: { password: string, pseudo: string, email: string } = req.body;
@@ -68,8 +76,8 @@ export namespace User {
 
 	}
 
-	export async function login(
-		req: Request<never, never, { password: string, email: string }, never>,
+	export async function Login(
+		req: Request<never, never, Request.Login, never>,
 		res: Response<{ token: string, id: ObjectId } | Error>) {
 		const { password, email }: { password: string, email: string } = req.body
 		if (!email || !password) {
@@ -100,8 +108,8 @@ export namespace User {
 		}
 	}
 
-	export async function del(
-		req: Request<AuthData, never, { deletePosts: number }, never>,
+	export async function Del(
+		req: Request<AuthData, never, Request.Del, never>,
 		res: Response<DeleteResult | { deletedUser: DeleteResult, deletedPosts: DeleteResult } | Error>) {
 
 		const id: ObjectId = req.authData._id;
@@ -158,8 +166,8 @@ export namespace User {
 		}
 	}
 
-	export async function get(
-		req: Request<any, any, any, Partial<UserSchema>>,
+	export async function Get(
+		req: Request<any, any, any, Request.Get>,
 		res: Response<UserSchema[] | Error>) {
 
 		const reqParams: Partial<UserSchema> = req.query;
@@ -185,8 +193,8 @@ export namespace User {
 		}
 	}
 
-	export async function put(
-		req: Request<AuthData, never, Partial<UserSchema>, never>,
+	export async function Put(
+		req: Request<AuthData, never, Request.Put, never>,
 		res: Response<UpdateResult | Error>) {
 		const id: ObjectId = req.authData._id;
 

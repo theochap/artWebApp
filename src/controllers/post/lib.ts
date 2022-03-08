@@ -3,14 +3,22 @@ import { User as UserSchema } from "../../schema/modelUser.js";
 import { Request, Response } from "express";
 import { DBVars } from "../../services/database.service.js";
 import { DeleteResult, InsertOneResult, ObjectId, UpdateResult } from 'mongodb';
-import { AuthData, Error } from "../common/routesTypes.js";
+import { AuthData, Error } from "../common/routes.js";
 import HTTP from "../common/errorCodes.js";
 import HttpStatusCode from "../common/errorCodes.js";
 var LIMIT_CONST = 15;
 
 export namespace Posts {
-	export async function add(
-		req: Request<AuthData, never, { title: string, body: string, authors: string[] }, never>,
+	export namespace Request {
+		export type Add = { title: string, body: string, authors: string[] }
+		export type Validate = { _id: string }
+		export type Put = { postId: string, updatedFields: Partial<PostSchema> }
+		export type Get = Partial<PostSchema>
+		export type Del = { _id: string }
+	}
+
+	export async function Add(
+		req: Request<AuthData, never, Request.Add, never>,
 		res: Response<InsertOneResult | Error>
 	) {
 
@@ -55,8 +63,8 @@ export namespace Posts {
 
 	}
 
-	export async function validate(
-		req: Request<AuthData, never, { _id: string }, never>,
+	export async function Validate(
+		req: Request<AuthData, never, Request.Validate, never>,
 		res: Response<UpdateResult | Error>) {
 
 		let { _id: postIdStr } = req.body;
@@ -82,8 +90,8 @@ export namespace Posts {
 
 	}
 
-	export async function put(
-		req: Request<AuthData, never, { postId: string, updatedFields: Partial<PostSchema> }, never>,
+	export async function Put(
+		req: Request<AuthData, never, Request.Put, never>,
 		res: Response<UpdateResult | Error>) {
 
 		const authorId: ObjectId = req.authData._id;
@@ -109,8 +117,8 @@ export namespace Posts {
 
 	}
 
-	export async function get(
-		req: Request<never, never, never, Partial<PostSchema>>,
+	export async function Get(
+		req: Request<never, never, never, Request.Get>,
 		res: Response<PostSchema[] | Error>) {
 		try {
 			const reqParams: Partial<PostSchema> = req.query
@@ -132,8 +140,8 @@ export namespace Posts {
 		}
 	}
 
-	export async function del(
-		req: Request<never, never, { _id: string }, never>,
+	export async function Del(
+		req: Request<never, never, Request.Del, never>,
 		res: Response<DeleteResult | Error>) {
 		try {
 			const id: ObjectId = new ObjectId(req.body._id);

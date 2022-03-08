@@ -1,11 +1,15 @@
-import { Comments } from './lib.js';
+import { SubRoutes } from '../../server.js';
+import { Reactions } from './lib.js';
 
 export function PublicReactionsMiddleware(app) {
-    app.get("/", Comments.get)
+    app.get("/", Reactions.GetAll)
+    app.get(SubRoutes.reactions.comments, Reactions.GetComments)
+    app.get(SubRoutes.reactions.emojis, Reactions.GetEmojis)
+
 }
 
 export function PrivateReactionsMiddleware(app) {
-    app.post("/", Comments.add);
-    app.delete("/", Comments.del);
-    app.put("/", Comments.put);
+    app.post("/", Reactions.Add);
+    app.delete("/", Reactions.Del);
+    app.put("/", Reactions.Put);
 }

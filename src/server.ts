@@ -11,9 +11,14 @@ import config from "config";
 import morgan from "morgan";
 
 export const Routes = { users: "/users", posts: "/posts", reactions: "/reactions" }
+export const SubRoutes = {
+	users: { login: "/login", auth: "/auth" },
+	posts: { validate: "/validate" },
+	reactions: { comments: "/comments", emojis: "/emojis" }
+}
 
 // Create an express app, exported for testing purposes
-export const app = express();
+export const App = express();
 
 // Body Parser
 const urlencodedParser = express.urlencoded({
@@ -23,53 +28,53 @@ const urlencodedParser = express.urlencoded({
 
 //don't show the log when it is test, and set morgan dev environment for development
 if (config.util.getEnv('NODE_ENV') == "dev") {
-	app.use(morgan('dev'));
+	App.use(morgan('dev'));
 } else if (config.util.getEnv('NODE_ENV') !== 'test') {
 	//use morgan to log at command line
-	app.use(morgan('combined')); //'combined' outputs the Apache style LOGs
+	App.use(morgan('combined')); //'combined' outputs the Apache style LOGs
 }
 
 // DataBase connection
 
 ConnectToDatabase().then(() => {
 	// CORS definition
-	app.use(cors());
+	App.use(cors());
 
-	app.use(urlencodedParser);
-	app.use(express.json());
+	App.use(urlencodedParser);
+	App.use(express.json());
 
 	// Router definition
 
 	const publicUserRouter = express.Router();
 	PublicUserMiddleware(publicUserRouter);
-	app.use(Routes.users, publicUserRouter);
+	App.use(Routes.users, publicUserRouter);
 
 	const privateUserRouter = express.Router();
 	PrivateUserMiddleware(privateUserRouter);
-	app.use(Routes.users, Authentificate.parseToken, Authentificate.authMiddleware, privateUserRouter);
+	App.use(Routes.users, Authentificate.parseToken, Authentificate.authMiddleware, privateUserRouter);
 
 	const publicWallRouter = express.Router();
 	PublicWallMiddleware(publicWallRouter);
-	app.use(Routes.posts, publicWallRouter);
+	App.use(Routes.posts, publicWallRouter);
 
 	const privateWallRouter = express.Router();
 	PrivateWallMiddleware(privateWallRouter);
-	app.use(Routes.posts, Authentificate.parseToken, Authentificate.authMiddleware, privateWallRouter);
+	App.use(Routes.posts, Authentificate.parseToken, Authentificate.authMiddleware, privateWallRouter);
 
 	const publicCommentsRouter = express.Router();
 	PublicReactionsMiddleware(publicCommentsRouter);
-	app.use(Routes.reactions, publicCommentsRouter);
+	App.use(Routes.reactions, publicCommentsRouter);
 
 	const privateCommentsRouter = express.Router();
 	PrivateReactionsMiddleware(privateCommentsRouter);
-	app.use(Routes.reactions, Authentificate.parseToken, Authentificate.authMiddleware, privateCommentsRouter);
+	App.use(Routes.reactions, Authentificate.parseToken, Authentificate.authMiddleware, privateCommentsRouter);
 
-	app.get("/", (req, res) => { res.status(200).json({ text: "Status 200: Success" }) });
+	App.get("/", (req, res) => { res.status(200).json({ text: "Status 200: Success" }) });
 
 	// Listen on port 8080
 	const port = 8080;
 
-	app.listen(port, () => console.log(`Listening on port ${port}`));
+	App.listen(port, () => console.log(`Listening on port ${port}`));
 
 
 }).catch(err => {
