@@ -13,8 +13,8 @@ const burl = "localhost:8080";
 
 export namespace Reactions {
     export namespace Request {
-        export type Add = { content: ReactionContent, post: ObjectId, parentComment?: ObjectId }
-        export type Put = { _id: string, updatedContent: string }
+        export type Add = { content: ReactionContent, post: ObjectId, parentReaction?: ObjectId }
+        export type Put = { _id: string, content: ReactionContent }
         export type Get = Partial<ReactionSchema>
         export type Del = { _id: string }
     }
@@ -32,7 +32,7 @@ export namespace Reactions {
             const comment: ReactionSchema = { author: thisAuthor, content, post: new ObjectId(post), timestamp: new Date() };
 
             // Insert a the parentCommentId to the comment variable if it exists.
-            if ("parentComment" in req.body) comment.parentComment = new ObjectId(req.body.parentComment);
+            if ("parentReaction" in req.body) comment.parentReaction = new ObjectId(req.body.parentReaction);
 
             const retComment = await DBVars.reactions.insertOne(comment);
 
@@ -58,7 +58,7 @@ export namespace Reactions {
         const comment: ObjectId = new ObjectId(req.body._id);
 
         try {
-            const resUpdate = await DBVars.reactions.updateOne({ _id: comment, author }, { $set: req.body.updatedContent });
+            const resUpdate = await DBVars.reactions.updateOne({ _id: comment, author }, { $set: { content: req.body.content } });
             if (resUpdate.matchedCount == 0) {
                 return res.status(HTTP.NOT_FOUND).json({ error: resUpdate })
             } else if (resUpdate.modifiedCount == 0) {
@@ -82,8 +82,13 @@ export namespace Reactions {
                 const reqParams: Request.Get = req.query
 
                 if ("_id" in reqParams) reqParams._id = new ObjectId(req.query._id);
+                if ("post" in reqParams) reqParams.post = new ObjectId(req.query.post);
+                if ("parentReaction" in reqParams) reqParams.parentReaction = new ObjectId(req.query.parentReaction);
+                if ("content.emoji" in reqParams) {
+                    reqParams['content.emoji'] = parseInt(reqParams['content.emoji'] as string)
+                }
 
-                const foundComments = DBVars.reactions.find<ReactionSchema>({ $and: [req.query, queryParams] });
+                const foundComments = DBVars.reactions.find<ReactionSchema>({ $and: [reqParams, queryParams] });
 
                 const returnedData = await foundComments.toArray();
 
@@ -117,13 +122,13 @@ export namespace Reactions {
             const resDelete = await DBVars.reactions.deleteOne({ _id: _id, author: req.authData._id });
 
             if (resDelete.deletedCount == 0) {
-                return res.status(404).json(resDelete)
+                return res.status(HTTP.NOT_FOUND).json(resDelete)
             } else {
-                return res.status(200).json(resDelete);
+                return res.status(HTTP.ACCEPTED).json(resDelete);
             }
         }
         catch (error) {
-            res.status(400).json({ error: error });
+            res.status(HTTP.BAD_REQUEST).json({ error: error });
         }
     }
 }

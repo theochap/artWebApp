@@ -1,11 +1,11 @@
 import { ObjectId } from "mongodb";
 
-export interface ReactionContent { text?: string, emoji?: number }
+export interface ReactionContent { text?: string, emoji?: number | string }
 export interface Comments {
     _id?: ObjectId,
     author: ObjectId,
     post: ObjectId,
-    parentComment?: ObjectId
+    parentReaction?: ObjectId
     content: ReactionContent,
     timestamp: Date
 }
