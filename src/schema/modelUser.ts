@@ -11,12 +11,12 @@ export interface UserCredentials {
 
 export class User {
     constructor(
-        public _id: ObjectId,
         public pseudo: string,
         public email: string,
-        public password?: string,
-        public createdAt?: Date,) {
-
+        public password: string,
+        public timestamp: Date = new Date(),
+        public _id: ObjectId = new ObjectId(),
+        public follows: ObjectId[] = []) {
     }
 
     public getToken(): string {

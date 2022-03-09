@@ -47,7 +47,7 @@ describe("Users", () => {
     before(async () => { await ConnectToDatabase() });
 
     beforeEach(async () => {
-        await DBVars.users.deleteMany({})
+        const res = await DBVars.users.deleteMany({})
         await DBVars.posts.deleteMany({})
     });
 
@@ -98,9 +98,8 @@ describe("Users", () => {
                 done();
             });
         });
-        it("Should POST a correct user otherwise", done => {
-            CreateTestUser(App, TestUser)
-            done()
+        it("Should POST a correct user otherwise", async () => {
+            await CreateTestUser(App, TestUser)
         });
 
         it("Should not be able to POST the same user another time", async () => {

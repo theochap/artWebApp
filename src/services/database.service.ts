@@ -4,64 +4,58 @@ import config from "config";
 import { User } from "../schema/modelUser";
 import { PostsValidator } from "../schema/modelPosts";
 import { Posts } from "../schema/modelPosts";
-import { ReactionsValidator } from "../schema/modelReactions";
+import { Comments, ReactionsValidator } from "../schema/modelReactions";
 
 // Global Variables
-export var DBVars: { users?: mongoDB.Collection, posts?: mongoDB.Collection, reactions?: mongoDB.Collection, client?: mongoDB.MongoClient } = {}
+export var DBVars: { users?: mongoDB.Collection<User>, posts?: mongoDB.Collection<Posts>, reactions?: mongoDB.Collection<Comments>, client?: mongoDB.MongoClient, db?: mongoDB.Db, collNames?: string[] } = {}
+
+async function safeCreateDB<T>(collectionName: string, collectionValidator?: Object): Promise<mongoDB.Collection<T>> {
+
+    let retCollection: mongoDB.Collection<T>
+
+    if (DBVars.collNames.includes(collectionName)) {
+
+        retCollection = DBVars.db.collection<T>(collectionName);
+
+        await DBVars.db.command({
+            "collMod": collectionName,
+            "validator": {
+                $jsonSchema: collectionValidator,
+            },
+            "validationLevel": "moderate"
+        });
+
+    } else {
+        retCollection = await DBVars.db.createCollection(collectionName, {
+            validator: {
+                $jsonSchema: PostsValidator,
+            }, validationLevel: "moderate"
+        })
+        DBVars.collNames.push(collectionName)
+    }
+
+    return retCollection
+}
 
 // Initialize Connection
 export async function ConnectToDatabase() {
 
     const dbConnString: string = config.get("db.prefix") + "://" + config.get("db.host") + ":" + config.get("db.port");
 
-    const Client = new mongoDB.MongoClient(dbConnString);
-    await Client.connect();
+    DBVars.client = new mongoDB.MongoClient(dbConnString);
+    await DBVars.client.connect();
 
-    const db: mongoDB.Db = Client.db(config.get("db.name"));
+    DBVars.db = DBVars.client.db(config.get("db.name"));
 
-    const postsCollectionName: string = config.get("collections.posts");
-    const postsCollection = db.collection(postsCollectionName);
+    let collectionsObj = await DBVars.db.listCollections().toArray()
+    DBVars.collNames = collectionsObj.map(collectionEl => collectionEl.name)
 
-    const usersCollectionName: string = config.get("collections.users")
-    const usersCollection = db.collection(usersCollectionName);
-
-    const commentsCollectionName: string = config.get("collections.comments")
-    const commentsCollection = db.collection(commentsCollectionName);
-
-
-    await db.command({
-        "collMod": postsCollectionName,
-        "validator": {
-            $jsonSchema: PostsValidator,
-        },
-        "validationLevel": "moderate"
-    });
-
-    await db.command({
-        "collMod": commentsCollectionName,
-        "validator": {
-            $jsonSchema: ReactionsValidator,
-        },
-        "validationLevel": "moderate"
-    });
-
-    await db.command({
-        "collMod": usersCollectionName,
-        "validator": {
-            $jsonSchema: User.DBValidator()
-        },
-        "validationLevel": "moderate"
-    });
-
-    await usersCollection.createIndexes([{ key: { pseudo: 1 }, unique: true }, { key: { email: 1 }, unique: true }]);
-
-    DBVars.users = usersCollection;
-    DBVars.posts = postsCollection;
-    DBVars.reactions = commentsCollection;
-    DBVars.client = Client;
-
+    DBVars.posts = await safeCreateDB<Posts>(config.get("collections.posts"), PostsValidator)
+    DBVars.users = await safeCreateDB<User>(config.get("collections.users"), User.DBValidator())
+    await DBVars.users.createIndexes([{ key: { pseudo: 1 }, unique: true }, { key: { email: 1 }, unique: true }]);
+    DBVars.reactions = await safeCreateDB<Comments>(config.get("collections.comments"), ReactionsValidator)
 
     if (config.util.getEnv('NODE_ENV') !== 'test') {
-        console.log(`Successfully connected to db : ${db.databaseName}. Loaded the collections ${usersCollection.collectionName} and ${postsCollection.collectionName}`);
+        console.log(`Successfully connected to db : ${DBVars.db.databaseName}. Loaded the collections ${DBVars.users.collectionName} and ${DBVars.posts.collectionName}`);
     }
 }

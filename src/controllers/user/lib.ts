@@ -52,12 +52,11 @@ export namespace User {
 
 		// create a user, and hash his password
 
-		const user = {
-			email: email,
-			pseudo: pseudo,
-			password: passwordHash.generate(password),
-			timestamp: new Date()
-		};
+		const user = new UserSchema(
+			pseudo,
+			email,
+			passwordHash.generate(password)
+		);
 
 		// verify that a user already exists
 		try {
@@ -106,7 +105,7 @@ export namespace User {
 
 		const _id = new ObjectId(req.body._id)
 		try {
-			const updateRes = await DBVars.users.updateOne({ _id: req.authData }, { $pop: { follows: _id } })
+			const updateRes = await DBVars.users.updateOne({ _id: req.authData }, { $pull: { follows: _id } })
 			if (updateRes.matchedCount == 0) {
 				return res.status(HTTP.NOT_FOUND).json({ error: "User not found" })
 			} else if (updateRes.modifiedCount == 0) {
@@ -138,7 +137,7 @@ export namespace User {
 
 			const findUserDoc = await DBVars.users.findOne<UserSchema>({ email: email });
 
-			const findUser = new UserSchema(findUserDoc._id, findUserDoc.pseudo, findUserDoc.email, findUserDoc.password);
+			const findUser = new UserSchema(findUserDoc.pseudo, findUserDoc.email, findUserDoc.password, new Date(), findUserDoc._id);
 
 			if (!findUser.authenticate(password)) {
 				throw new Error("Can't authenticate")
