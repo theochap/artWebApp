@@ -1,4 +1,5 @@
 import { ObjectId } from "mongodb";
+import internal from "stream";
 
 export interface UserPostData {
 	_id: ObjectId,
@@ -11,6 +12,7 @@ export interface Posts {
 	title: string,
 	body: string,
 	timestamp?: Date,
+	content?: { mimetype: string, size: number, data: BinaryData },
 	visible?: boolean,
 	validators?: ObjectId[]
 };
@@ -46,6 +48,25 @@ export const PostsValidator = {
 			},
 			uniqueItems: true,
 			description: "must be an array of unique objectIds and is required"
+		},
+		content: {
+			bsonType: "object",
+			required: ["mimetype", "size", "data"],
+			additionalProperties: false,
+			properties: {
+				data: {
+					bsonType: "binData",
+					description: "a binary file of relatively small size (<10 MB)"
+				},
+				size: {
+					bsonType: "int",
+					description: "Size of the data file"
+				},
+				mimetype: {
+					bsonType: "string",
+					description: "mimetype of the file"
+				}
+			}
 		},
 		body: {
 			bsonType: "string",

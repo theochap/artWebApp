@@ -6,6 +6,7 @@ import { DeleteResult, InsertOneResult, ObjectId, UpdateResult } from 'mongodb';
 import { AuthData, Error } from "../common/routes.js";
 import HTTP from "../common/errorCodes.js";
 import HttpStatusCode from "../common/errorCodes.js";
+
 var LIMIT_CONST = 15;
 
 export namespace Posts {
@@ -24,7 +25,7 @@ export namespace Posts {
 
 		try {
 			const thisAuthor: ObjectId = req.authData._id;
-			const { title, body, authors: authorsIdStr }: { title: string, body: string, authors: string[] } = req.body;
+			let { title, body, authors: authorsIdStr }: { title: string, body: string, authors: string[] | string } = req.body;
 
 			if (!title || !body || !authorsIdStr || !Array.isArray(authorsIdStr) || !(authorsIdStr.includes(thisAuthor.toHexString()))) {
 				//No title / body / Authors / publisher is not an author
@@ -49,6 +50,9 @@ export namespace Posts {
 
 			// Create the post.
 			const post: PostSchema = { authors, title, body, validators, timestamp: new Date() };
+
+			if ("file" in req)
+				post.content = { data: req.file.buffer, mimetype: req.file.mimetype, size: req.file.size }
 
 			const retPost = await DBVars.posts.insertOne(post);
 
