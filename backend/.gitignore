@@ -1,0 +1,5 @@
+/node_modules/*
+/built/*
+!/config/dev.json
+!/config/test.json
+/config/*
