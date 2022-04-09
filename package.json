@@ -4,10 +4,10 @@
 	"main": "built/server.js",
 	"author": "ArteFact",
 	"scripts": {
-		"start": "export NODE_ENV=prod && node built/server.js",
-		"start_dev": "export NODE_ENV=dev && nodemon built/server.js",
-		"test": "mocha --exit built/test/*.test.js",
-		"compile-test": "tsc && mocha --exit -t 10000 built/test/*.test.js"
+		"start": "export NODE_ENV=prod && node backend/built/server.js",
+		"start_dev": "export NODE_ENV=dev && nodemon backend/built/server.js",
+		"test-back": "mocha --exit backend/built/test/*.test.js",
+		"compile-test-back": "cd backend && tsc && mocha --exit -t 10000 built/test/*.test.js"
 	},
 	"dependencies": {
 		"body-parser": "^1.19.0",
