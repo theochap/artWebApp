@@ -9,7 +9,7 @@ const allUsers = ref()
 
 async function login() {
     try {
-        const res = await axios.post("http://localhost:8080/users/login", { password, email })
+        const res = await axios.post("http://localhost:8080/users/login", { password: password.value, email: email.value })
         loginRes.value = res.data
     } catch (err) {
         console.log(err)

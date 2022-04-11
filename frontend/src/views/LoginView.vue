@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import LoginForm from "@/components/LoginForm.vue"
+import LogInForm from "@/components/LogInForm.vue"
 </script>
 
 <template>
     <main>
         <h1>Connection:</h1>
-        <LoginForm />
+        <LogInForm />
     </main>
 </template>
