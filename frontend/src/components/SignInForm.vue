@@ -22,7 +22,7 @@ async function signin() {
 </script>
 
 <template>
-    <p>{{ signinRes }}</p>
+    <p class="underline">{{ signinRes }}</p>
     <form @submit.prevent="signin">
         <label>Pseudo:</label>
         <input type="text" v-model="signinData.pseudo" />

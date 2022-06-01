@@ -38,9 +38,9 @@ async function getUsers() {
         <input type="password" v-model="password" />
         <br />
 
-        <button type="submit">Se connecter !</button>
+        <button class="ring-offset-green-400 " type="submit">Se connecter !</button>
     </form>
 
     <button @click="getUsers">Get users</button>
-    <p>{{ allUsers }}</p>
+    <p class="italic">{{ allUsers }}</p>
 </template>

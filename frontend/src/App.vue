@@ -65,7 +65,6 @@ button {
   border: 1px solid #ccc;
   border-radius: 4px;
   min-width: 7rem;
-
 }
 
 button:hover {
@@ -112,8 +111,9 @@ nav a:first-of-type {
 
 @media (min-width: 1024px) {
   body {
-    display: flex;
     place-items: center;
+    padding-left: 15%;
+    padding-right: 15%;
   }
 
   header {
