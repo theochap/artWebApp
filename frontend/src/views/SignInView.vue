@@ -4,7 +4,7 @@ import SignInForm from "@/components/SignInForm.vue"
 
 <template>
     <main>
-        <h1>Inscription:</h1>
+        <h1 class="section_head">Inscription:</h1>
         <SignInForm />
     </main>
 </template>

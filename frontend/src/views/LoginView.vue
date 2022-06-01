@@ -4,7 +4,7 @@ import LogInForm from "@/components/LogInForm.vue"
 
 <template>
     <main>
-        <h1>Connection:</h1>
+        <h1 class="section_head">Connection:</h1>
         <LogInForm />
     </main>
 </template>

@@ -1,14 +1,13 @@
 <script setup lang="ts">
 import { RouterLink, RouterView } from 'vue-router'
-import HelloWorld from '@/components/HelloWorld.vue'
+
 </script>
 
 <template>
   <header>
-    <img alt="Vue logo" class="logo" src="@/assets/logo.svg" width="125" height="125" />
+    <img alt="Vue logo" class="logo" src="@/assets/logo+image.png" width="150" height="120" />
 
     <div class="wrapper">
-      <HelloWorld msg="You did it!" />
 
       <nav>
         <RouterLink to="/">Home</RouterLink>
@@ -36,6 +35,11 @@ import HelloWorld from '@/components/HelloWorld.vue'
 header {
   line-height: 1.5;
   max-height: 100vh;
+
+}
+
+.section_head {
+  margin-bottom: 1rem;
 }
 
 .logo {
@@ -43,10 +47,36 @@ header {
   margin: 0 auto 2rem;
 }
 
+input[type=text],
+input[type=password] {
+  width: 100%;
+  padding: 12px 12px;
+  margin: 4px 0 12px;
+  display: inline-block;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+button {
+  margin: 4px 0px 12px;
+  padding: 12px 0px;
+  background-color: var(--vt-c-pistache-light);
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  min-width: 7rem;
+
+}
+
+button:hover {
+  background-color: var(--vt-c-pistache);
+  cursor: pointer;
+}
+
 a,
 .green {
   text-decoration: none;
-  color: hsla(160, 100%, 37%, 1);
+  color: var(--vt-c-pistache);
   transition: 0.4s;
 }
 
@@ -57,10 +87,9 @@ a,
 }
 
 nav {
-  width: 100%;
   font-size: 12px;
   text-align: center;
-  margin-top: 2rem;
+  margin-bottom: 2rem;
 }
 
 nav a.router-link-exact-active {
@@ -85,12 +114,6 @@ nav a:first-of-type {
   body {
     display: flex;
     place-items: center;
-  }
-
-  #app {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    padding: 0 2rem;
   }
 
   header {
