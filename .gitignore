@@ -2,4 +2,4 @@
 /built/*
 !/config/dev.json
 !/config/test.json
-/config/*
+/config/prod.json

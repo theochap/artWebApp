@@ -1,0 +1,16 @@
+{
+    "db": {
+        "prefix": "mongodb",
+        "host": "localhost",
+        "port": "27017",
+        "name": "ArteFact_Dev"
+    },
+    "jwt": {
+        "pass": "artWebApp"
+    },
+    "collections": {
+        "posts": "Posts",
+        "users": "Users",
+        "comments": "Comments"
+    }
+}
