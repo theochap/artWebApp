@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { reactive, ref } from "vue"
 import axios from "axios"
+import { useUserStore } from "../../stores/user"
 
 const signinData = reactive({
     pseudo: "",
@@ -8,12 +9,17 @@ const signinData = reactive({
     password: ""
 })
 
+const user = useUserStore()
+
 const signinRes = ref()
 
 async function signin() {
     try {
         const res = await axios.post("http://localhost:8080/users/", signinData)
-        signinRes.value = res.data
+        if(res.status === 201){ // HTTP ressource created
+            const userData = await user.registerUser(signinData.email, signinData.password)
+            signinRes.value = "Successfully signed in! Welcome to artefact " + userData + "!"
+        } 
     } catch (err) {
         console.log(err)
     }
@@ -22,7 +28,6 @@ async function signin() {
 </script>
 
 <template>
-    <p class="underline">{{ signinRes }}</p>
     <form @submit.prevent="signin">
         <label>Pseudo:</label>
         <input type="text" v-model="signinData.pseudo" />
@@ -38,4 +43,7 @@ async function signin() {
 
         <button type="submit">Inscription</button>
     </form>
+    
+    <h3>{{ signinRes }}</h3>
+
 </template>
