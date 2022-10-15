@@ -8,8 +8,6 @@ import Feed from "../components/feed/Feed.vue"
             Welcome on Artefact !
         </h1>
 
-        <h2> Activity feed </h2>
-
         <Feed/>
 
     </main>

@@ -28,21 +28,23 @@ async function signin() {
 </script>
 
 <template>
-    <form @submit.prevent="signin">
-        <label>Pseudo:</label>
-        <input type="text" v-model="signinData.pseudo" />
-        <br />
-
-        <label>Email:</label>
-        <input type="text" v-model="signinData.email" />
-        <br />
-
-        <label>Mot de passe:</label>
-        <input type="password" v-model="signinData.password" />
-        <br />
-
-        <button type="submit">Inscription</button>
-    </form>
-    <h3>{{ signinRes }}</h3>
+    <div>
+        <form @submit.prevent="signin">
+            <label>Username:</label>
+            <input type="text" v-model="signinData.pseudo" />
+            <br />
+    
+            <label>Email:</label>
+            <input type="text" v-model="signinData.email" />
+            <br />
+    
+            <label>Password:</label>
+            <input type="password" v-model="signinData.password" />
+            <br />
+    
+            <button class="ring-offset-green-400 bg-pistacheLight border-spacing-1.5 rounded text-lg p-3 text-candy hover:bg-whiteSoft">Sign in</button>
+        </form>
+        <h3>{{ signinRes }}</h3>
+    </div>
 
 </template>

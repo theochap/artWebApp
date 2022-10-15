@@ -41,7 +41,8 @@ async function getUsers() {
             <input type="password" v-model="password" />
             <br />
     
-            <button class="ring-offset-green-400 " type="submit">Sign in</button>
+            <button class="ring-offset-green-400 bg-pistacheLight border-spacing-1.5 rounded text-lg p-3 text-candy hover:bg-whiteSoft"
+             type="submit">Log in</button>
         </form>
     
         <button @click="getUsers">Get users</button>

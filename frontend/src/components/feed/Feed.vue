@@ -53,28 +53,33 @@ onMounted(getPosts)
 </script>
 
 <template>
-    <div v-if="user.isConnected">
-        <p> Post as {{user.username}}</p>
-        <form @submit.prevent="submitPost">
-            <label>Title:</label>
-            <input type="text" v-model="postData.title" />
-            <br />
+    <div>
+        <div v-if="user.isConnected">
+            <p> Post as {{user.username}}</p>
+            <form @submit.prevent="submitPost">
+                <label>Title:</label>
+                <input type="text" v-model="postData.title" />
+                <br />
+        
+                <label>Body:</label>
+                <input type="text" v-model="postData.body" />
+                <br />
+        
+                <button class="ring-offset-green-400 " type="submit">Create post!</button>
+            </form>
     
-            <label>Body:</label>
-            <input type="text" v-model="postData.body" />
-            <br />
+            <p>{{submitRes}}</p>
+        </div>
+
+        <h2> Activity feed </h2>
     
-            <button class="ring-offset-green-400 " type="submit">Create post!</button>
-        </form>
+        <div v-if="loaded">
+            <li v-for="post in allPosts" :key="post._id">
+                <PostBox :authors="post.authors" :title="post.title" :body="post.body" :stamp="post.timestamp"/>
+            </li>
+        </div>
+    
+        <div v-else><p>Loading posts...</p></div>
 
-        <p>{{submitRes}}</p>
     </div>
-
-    <div v-if="loaded">
-        <li v-for="post in allPosts" :key="post._id">
-            <PostBox :authors="post.authors" :title="post.title" :body="post.body" :stamp="post.timestamp"/>
-        </li>
-    </div>
-
-    <div v-else><p>Loading posts...</p></div>
 </template>

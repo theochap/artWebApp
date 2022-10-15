@@ -1,5 +1,9 @@
 <script setup lang="ts">
 import { RouterLink, RouterView } from 'vue-router'
+import {ref} from "vue"
+import {useUserStore} from "./stores/user"
+
+const user = useUserStore()
 
 </script>
 
@@ -13,8 +17,14 @@ import { RouterLink, RouterView } from 'vue-router'
         <nav>
           <RouterLink to="/">Home</RouterLink>
           <RouterLink to="/about">About</RouterLink>
-          <RouterLink to="/login">Login</RouterLink>
-          <RouterLink to="/signin">Sign in</RouterLink>
+          <span v-if="user.isConnected">
+            <RouterLink to="/account">Account</RouterLink>
+            <button @click="user.destructor" class="text-pistache pl-3 pr-3 hover:bg-pistache hover:bg-opacity-30">Sign out</button>
+          </span>
+          <span v-else>
+            <RouterLink to="/login">Login</RouterLink>
+            <RouterLink to="/signin">Sign in</RouterLink>
+          </span>
         </nav>
       </div>
     </header>
@@ -58,20 +68,6 @@ input[type=password] {
   border: 1px solid #ccc;
   border-radius: 4px;
   box-sizing: border-box;
-}
-
-button {
-  margin: 4px 0px 12px;
-  padding: 12px 0px;
-  background-color: var(--vt-c-pistache-light);
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  min-width: 7rem;
-}
-
-button:hover {
-  background-color: var(--vt-c-pistache);
-  cursor: pointer;
 }
 
 a,

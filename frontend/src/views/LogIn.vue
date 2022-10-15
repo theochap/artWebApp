@@ -7,3 +7,4 @@ import LogInForm from "../components/login/LogInForm.vue"
         <LogInForm />
     </main>
 </template>
+
