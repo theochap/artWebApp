@@ -35,6 +35,7 @@ async function submitPost(){
         const res = await axios.post("http://localhost:8080/posts/", postData, {headers: { Authorization: `Bearer ${user.token}` } })
         if(res.status === 201){ // HTTP ressource created
             submitRes.value = "The post have been successfully created!"
+            getPosts()
         } 
     } catch (err) {
         console.log(err)

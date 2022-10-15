@@ -4,7 +4,7 @@ module.exports = {
     "./src/**/*.{vue,js,ts,jsx,tsx}",
   ],
   theme: {
-    colors:{
+    extend: {colors:{
       white: "#ffffff",
       whiteSoft: '#fff9e1',
       whiteMute: '#fdf5d5',
@@ -19,8 +19,7 @@ module.exports = {
   
       pistache: '#56cf7c',
       pistacheLight: '#97f0d2',
-    },
-    extend: {},
+    }},
   },
   plugins: [],
 }

@@ -36,6 +36,20 @@ async function deletePostFromUser(postId: string){
     }
 }
 
+async function deleteUserAccount(){
+    try {
+        const res = await axios.delete("http://localhost:8080/users", {data: {deleteData : 1}, headers:{Authorization: `Bearer ${user.token}`}})
+        console.log(res)
+        if (res.status === 202){
+            user.destructor()
+        } else{
+            throw Error("Failed to delete the user.")
+        }
+    } catch (err) {
+        console.log(err)
+    }
+}
+
 onMounted(getPostsFromUser)
 
 </script>
@@ -46,6 +60,7 @@ onMounted(getPostsFromUser)
             <h1 class="mb-1">Account information</h1>
             <p> Username: {{user.username}} - <button class="bg-candy pl-2 pr-2 pt-1 pb-1 rounded-md">Update</button></p>
             <p> Email address: {{user.email}} - <button class="bg-candy pl-2 pr-2 pt-1 pb-1 rounded-md">Update</button></p>
+            <button @click="deleteUserAccount" class="bg-red-400 pl-2 pr-2 pt-1 pb-1 rounded-md">Delete account</button>
             <h1 class="mt-5 mb-1"> Latest posts: </h1>
             <div v-if="latestPostsSize">
                 <ul>
