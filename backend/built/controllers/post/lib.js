@@ -173,6 +173,7 @@ var Posts;
                         if (reqParams._id) {
                             reqParams._id = new mongodb_1.ObjectId(req.query._id);
                         }
+                        console.log(req.query);
                         wallPosts = (database_service_js_1.DBVars.posts.find(reqParams));
                         return [4 /*yield*/, wallPosts.toArray()];
                     case 1:

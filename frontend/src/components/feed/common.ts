@@ -12,3 +12,9 @@ export interface Post {
 	content?: { mimetype: string, size: number, data: BinaryData },
 	visible?: boolean,
 };
+
+export interface PostData{
+    title:string,
+    body:string,
+    authors: (string| undefined)[] 
+}

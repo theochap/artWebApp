@@ -4,13 +4,7 @@ import type {Ref} from "vue"
 import axios from "axios"
 import PostBox from "./PostBox.vue"
 import {useUserStore} from "../../stores/user"
-import type {UserPostData, Post} from "./common"
-
-interface PostData{
-    title:string,
-    body:string,
-    authors: (string| undefined)[] 
-}
+import type {UserPostData, Post, PostData} from "./common"
 
 const postData:PostData = reactive({
     title: "",
