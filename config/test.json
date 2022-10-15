@@ -2,8 +2,10 @@
     "db": {
         "prefix": "mongodb",
         "host": "localhost",
-        "port": "27017",
-        "name": "ArteFact_Test"
+        "port": "5432",
+        "name": "ArteFact_Test",
+        "user": "admin_test",
+        "password": "test"
     },
     "jwt": {
         "pass": "artWebApp"
