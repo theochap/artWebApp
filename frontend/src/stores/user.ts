@@ -7,7 +7,10 @@ export const useUserStore = defineStore({
     user: null as UserInfo | null,
   }),
   getters: {
-    username: (state) => state.user?.username
+    id: (state) => state.user?._id,
+    username: (state) => state.user?.username,
+    token: (state) => state.user?.token,
+    isConnected: (state) => state.user != null
   },
   actions: {
     async registerUser(email:string, password:string) {
@@ -16,7 +19,7 @@ export const useUserStore = defineStore({
         if(res_login.status === 202){ // Status accepted
           const res_get = await axios.get("http://localhost:8080/users/?_id="+res_login.data.id)
           if(res_get.data.length>0){
-            this.user = { email: res_get.data[0].email, username: res_get.data[0].pseudo, token: res_login.data.token}
+            this.user = { _id:res_login.data.id ,email: res_get.data[0].email, username: res_get.data[0].pseudo, token: res_login.data.token}
             return this.user.username
           }
         } else{
@@ -25,7 +28,7 @@ export const useUserStore = defineStore({
 
     } catch (err) {
         console.log(err)
-        this.user = {email: "", username: ""}
+        this.user = null
         throw err
     }
     }
@@ -33,6 +36,7 @@ export const useUserStore = defineStore({
 })
 
 interface UserInfo {
+  _id: string,
   email: string,
   username: string,
   token: string

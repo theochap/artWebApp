@@ -43,7 +43,6 @@ async function signin() {
 
         <button type="submit">Inscription</button>
     </form>
-    
     <h3>{{ signinRes }}</h3>
 
 </template>

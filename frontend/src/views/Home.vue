@@ -1,10 +1,16 @@
+<script setup lang="ts">
+import Feed from "../components/feed/Feed.vue"
+</script>
+
 <template>
     <main>
         <h1 class="font-extrabold mb-4 text-xl">
-            Bienvenue sur Artefact !
+            Welcome on Artefact !
         </h1>
 
-        <h2> Fil d'actualité </h2>
+        <h2> Activity feed </h2>
+
+        <Feed/>
 
     </main>
 

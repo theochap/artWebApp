@@ -31,21 +31,23 @@ async function getUsers() {
 </script>
 
 <template>
-    <form @submit.prevent="login">
-        <label>Email:</label>
-        <input type="text" v-model="email" />
-        <br />
-
-        <label>Password:</label>
-        <input type="password" v-model="password" />
-        <br />
-
-        <button class="ring-offset-green-400 " type="submit">Sign in</button>
-    </form>
-
-    <button @click="getUsers">Get users</button>
-    <p class="italic">{{ allUsers }}</p>
-
-    <h3>{{ loginRes }}</h3>
+    <div>
+        <form @submit.prevent="login">
+            <label>Email:</label>
+            <input type="text" v-model="email" />
+            <br />
+    
+            <label>Password:</label>
+            <input type="password" v-model="password" />
+            <br />
+    
+            <button class="ring-offset-green-400 " type="submit">Sign in</button>
+        </form>
+    
+        <button @click="getUsers">Get users</button>
+        <p class="italic">{{ allUsers }}</p>
+    
+        <h3>{{ loginRes }}</h3>
+    </div>
 
 </template>

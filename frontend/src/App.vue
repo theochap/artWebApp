@@ -4,21 +4,23 @@ import { RouterLink, RouterView } from 'vue-router'
 </script>
 
 <template>
-  <header>
-    <img alt="Vue logo" class="logo" src="@/assets/logo+image.png" width="150" height="120" />
-
-    <div class="wrapper">
-
-      <nav>
-        <RouterLink to="/">Home</RouterLink>
-        <RouterLink to="/about">About</RouterLink>
-        <RouterLink to="/login">Connection</RouterLink>
-        <RouterLink to="/signin">Inscription</RouterLink>
-      </nav>
-    </div>
-  </header>
-
-  <RouterView />
+  <div>
+    <header>
+      <img alt="Vue logo" class="logo" src="@/assets/logo+image.png" width="150" height="120" />
+  
+      <div class="wrapper">
+  
+        <nav>
+          <RouterLink to="/">Home</RouterLink>
+          <RouterLink to="/about">About</RouterLink>
+          <RouterLink to="/login">Login</RouterLink>
+          <RouterLink to="/signin">Sign in</RouterLink>
+        </nav>
+      </div>
+    </header>
+  
+    <RouterView />
+  </div>
 </template>
 
 <style>
