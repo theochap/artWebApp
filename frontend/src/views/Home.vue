@@ -4,7 +4,7 @@ import Feed from "../components/feed/Feed.vue"
 
 <template>
     <main>
-        <h1 class="font-extrabold mb-4 text-xl">
+        <h1 class="font-extrabold mb-4 text-2xl">
             Welcome on Artefact !
         </h1>
 

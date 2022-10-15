@@ -54,7 +54,7 @@ onMounted(getPosts)
 
 <template>
     <div>
-        <div v-if="user.isConnected">
+        <div v-if="user.isConnected" class="mb-5 mt-2 bg-whiteSoft p-5 pt-2 rounded-md border-blackSoft border-2 border-opacity-20">
             <p> Post as {{user.username}}</p>
             <form @submit.prevent="submitPost">
                 <label>Title:</label>
@@ -71,12 +71,12 @@ onMounted(getPosts)
             <p>{{submitRes}}</p>
         </div>
 
-        <h2> Activity feed </h2>
+        <h2 class="pb-3 text-xl"> Activity feed </h2>
     
         <div v-if="loaded">
-            <li v-for="post in allPosts" :key="post._id">
+            <div v-for="post in allPosts" :key="post._id">
                 <PostBox :authors="post.authors" :title="post.title" :body="post.body" :stamp="post.timestamp"/>
-            </li>
+            </div>
         </div>
     
         <div v-else><p>Loading posts...</p></div>
