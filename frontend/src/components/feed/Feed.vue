@@ -70,7 +70,7 @@ onMounted(getPosts)
     
         <div v-if="loaded">
             <div v-for="post in allPosts" :key="post._id">
-                <PostBox :authors="post.authors" :title="post.title" :body="post.body" :stamp="post.timestamp"/>
+                <PostBox :authors="post.authors" :title="post.title" :body="post.body" :stamp="post.timestamp" :_id="post._id"/>
             </div>
         </div>
     

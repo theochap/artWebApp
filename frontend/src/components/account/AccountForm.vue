@@ -3,6 +3,7 @@ import Vue, { onMounted, ref, computed } from 'vue'
 import { useUserStore } from '../../stores/user'
 import AccountInfo from "./AccountInfo.vue"
 import axios from "axios"
+import PostBox from "../feed/PostBox.vue"
 
 const user = useUserStore()
 const latestPosts = ref()
@@ -58,20 +59,25 @@ onMounted(getPostsFromUser)
 <template>
     <div>
         <div v-if="user.isConnected">
-            <h1 class="mb-1 text-xl">Account information</h1>
+            <h1 class="mt-1 text-xl">Account information</h1>
             <AccountInfo info-field-name="email" info-name="Email" :info-value="user.email" user-field-name="email" />
             <AccountInfo info-field-name="pseudo" info-name="Username" :info-value="user.username" user-field-name="username" />
 
             <button @click="deleteUserAccount" class="bg-red-400 pl-2 pr-2 pt-1 pb-1 rounded-md">Delete account</button>
             
-            <h1 class="mt-5 mb-1 text-xl"> Latest posts: </h1>
+            <h1 class="mt-5 text-xl"> Latest posts: </h1>
             <div v-if="latestPostsSize">
                 <ul>
-                    <li v-for="post in latestPosts" :key="post._id">{{post.title}}, posted on the {{post.timestamp}}. <br/> 
-                        Body: {{post.body}} <button @click="deletePostFromUser(post._id)" class="bg-candy pl-2 pr-2 pt-1 pb-1 rounded-md">Delete!</button></li>
+                    <li v-for="post in latestPosts" :key="post._id"> 
+                        <PostBox :authors="post.authors" :title="post.title" :body="post.body" :stamp="post.timestamp" :_id="post._id"/>
+                        <button @click="deletePostFromUser(post._id)" class="bg-candy pl-2 pr-2 pt-1 pb-1 rounded-md">Delete post</button>
+                        <br/>
+                        
+                    </li>
                 </ul>
             </div>
             <div v-else> <p>No posts!</p></div>
+
             
         </div>
         <div v-else>
